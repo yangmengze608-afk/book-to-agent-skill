@@ -4,7 +4,6 @@ duplicate slug install, malformed metadata, eval counts."""
 import shutil
 
 import pytest
-import yaml
 
 from book_to_agent_skill.util import read_yaml, write_yaml
 from book_to_agent_skill.validate import SkillValidator
@@ -94,6 +93,22 @@ def test_too_few_eval_cases_fail(example_skill, taxonomy, tmp_path):
     result = [r for r in validator.results if r.name == "eval-cases"]
     assert result and not result[0].ok
     assert "edge_case" in result[0].detail
+
+
+def test_profile_extra_reference_is_required(example_skill, taxonomy, tmp_path):
+    """Validator requirements must follow the selected category profile,
+    including future category-specific reference files."""
+    skill = _copy_skill(example_skill, tmp_path)
+    profile = dict(taxonomy.profile("decision-making"))
+    profile["reference_files"] = dict(profile["reference_files"])
+    profile["reference_files"]["decision-log.md"] = "Decision log template."
+    taxonomy._profile_cache["decision-making"] = profile
+
+    validator = SkillValidator(skill, taxonomy)
+    assert not validator.run()
+    layout = [r for r in validator.results if r.name == "layout"]
+    assert layout and not layout[0].ok
+    assert "decision-log.md" in layout[0].detail
 
 
 def test_duplicate_slug_install_refused(example_skill, tmp_path, capsys):
