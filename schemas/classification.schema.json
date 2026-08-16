@@ -44,6 +44,17 @@
       "items": { "type": "string", "maxLength": 60 },
       "maxItems": 12
     },
+    "language": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 20,
+      "description": "Language code or 'und' when genuinely undetermined. Optional for backward compatibility; new agent classifications should set it."
+    },
+    "book_type": {
+      "type": "string",
+      "enum": ["monograph", "textbook", "handbook", "essay-collection", "biography", "narrative", "other"],
+      "description": "Structural book type. Optional for backward compatibility; new agent classifications should set it."
+    },
     "method": {
       "type": "string",
       "enum": ["heuristic", "agent", "openai", "anthropic"],
