@@ -33,6 +33,11 @@ philosophy-thinking, health-performance, reference-knowledge, other
 5. List plausible alternatives with their own confidences.
 6. Ground the rationale in the book's actual content (quote chapter titles
    or themes, briefly).
+7. Set `language` from the actual book. Use a short language code such as
+   `en`, `zh`, `ja`, `ko`; use `und` if you genuinely cannot determine it.
+8. Set `book_type` to one of: `monograph`, `textbook`, `handbook`,
+   `essay-collection`, `biography`, `narrative`, `other`. Do not default every
+   book to monograph; use `other` when the structure is not clear.
 
 ## Output
 
@@ -48,5 +53,7 @@ alternative_categories:
   - category: psychology-behavior
     confidence: 0.63
 tags: [probability, belief-updating]
+language: en
+book_type: monograph
 method: agent
 ```
