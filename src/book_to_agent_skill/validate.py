@@ -20,6 +20,8 @@ from .taxonomy import Taxonomy, TaxonomyError
 from .util import read_text, read_yaml
 
 REQUIRED_FILES = ["SKILL.md", "BOOK.yaml", "evals/cases.yaml"]
+# Fallback only. Once BOOK.yaml identifies a valid category, the profile's
+# reference_files mapping is authoritative (including category-specific extras).
 REQUIRED_REFERENCES = [
     "principles.md",
     "frameworks.md",
@@ -46,11 +48,32 @@ class SkillValidator:
     def _check(self, name: str, ok: bool, detail: str = "") -> None:
         self.results.append(CheckResult(name=name, ok=ok, detail=detail))
 
+    def _required_references(self) -> List[str]:
+        """Resolve reference requirements from BOOK.yaml's category profile.
+
+        If metadata is absent or malformed, fall back to the base six files so
+        layout validation can still produce a useful error report. The later
+        BOOK.yaml check remains authoritative for metadata correctness.
+        """
+        book_yaml = self.dir / "BOOK.yaml"
+        if not book_yaml.is_file():
+            return list(REQUIRED_REFERENCES)
+        try:
+            meta = read_yaml(book_yaml) or {}
+            category = meta.get("primary_category")
+            if category in self.taxonomy.by_id:
+                return list(self.taxonomy.profile(category)["reference_files"].keys())
+        except Exception:
+            pass
+        return list(REQUIRED_REFERENCES)
+
     def run(self) -> bool:
+        required_references = self._required_references()
+
         # 1. layout -------------------------------------------------------
         missing = [f for f in REQUIRED_FILES if not (self.dir / f).is_file()]
         refs_missing = [
-            f for f in REQUIRED_REFERENCES
+            f for f in required_references
             if not (self.dir / "references" / f).is_file()
         ]
         detail = ""
@@ -131,7 +154,7 @@ class SkillValidator:
         todo_files: List[Path] = (
             [self.dir / "SKILL.md"] if (self.dir / "SKILL.md").is_file() else []
         )
-        for ref in REQUIRED_REFERENCES:
+        for ref in required_references:
             p = self.dir / "references" / ref
             if p.is_file():
                 todo_files.append(p)
@@ -149,7 +172,7 @@ class SkillValidator:
 
         # 6. provenance ------------------------------------------------------
         provenance_errors: List[str] = []
-        for ref in REQUIRED_REFERENCES:
+        for ref in required_references:
             p = self.dir / "references" / ref
             if not p.is_file():
                 continue  # already reported in layout
