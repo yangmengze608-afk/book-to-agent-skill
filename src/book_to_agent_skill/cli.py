@@ -19,6 +19,7 @@ from .ingest import IngestError, ingest
 from .models import Book
 from .providers import get_provider
 from .providers.base import NeedsAgentReasoning, ProviderError
+from .scope import ScopeError, enforce_book_scope
 from .taxonomy import Taxonomy, TaxonomyError
 from .util import read_text, read_yaml, slugify, write_text, write_yaml
 from .validate import SkillValidator
@@ -98,6 +99,7 @@ def _load_book_for_workspace(ws: Workspace) -> Book:
             )
     if book_path and Path(book_path).exists():
         book = ingest(Path(book_path))
+        enforce_book_scope(book)
     else:
         raise IngestError(f"original book missing ({book_path}); re-run init")
     return book
@@ -117,6 +119,7 @@ def cmd_init(args) -> int:
             "(no text layer). V1 does not do OCR - see README Limitations."
         )
         return 2
+    enforce_book_scope(book)
     ws = Workspace(Path(args.workspace)).ensure()
     _init_workspace(ws, book, taxonomy)
     print(f"Book: {book.title_hint or book.path.name} ({book.fmt}, "
@@ -215,8 +218,6 @@ def cmd_run(args) -> int:
     taxonomy = Taxonomy()
     book_path = Path(args.book)
     slug = slugify(book_path.stem)
-    ws = Workspace(Path(args.workspace) if args.workspace else
-                   Path.cwd() / f"b2a-workspace-{slug}").ensure()
     try:
         book = ingest(book_path)
     except IngestError as e:
@@ -226,7 +227,10 @@ def cmd_run(args) -> int:
         print(f"OCR required: '{book.path.name}' looks like a scanned PDF. "
               "V1 does not do OCR - see README Limitations.")
         return 2
+    enforce_book_scope(book)
 
+    ws = Workspace(Path(args.workspace) if args.workspace else
+                   Path.cwd() / f"b2a-workspace-{slug}").ensure()
     print(f"Book: {book.title_hint or book_path.name} ({book.fmt}, "
           f"{len(book.chapters)} chapters, ~{book.words} words)")
     heuristic = _init_workspace(ws, book, taxonomy)
@@ -369,7 +373,7 @@ def main(argv=None) -> int:
         return 0
     try:
         return args.func(args)
-    except (IngestError, TaxonomyError) as e:
+    except (IngestError, ScopeError, TaxonomyError) as e:
         print(f"error: {e}")
         return 2
 
