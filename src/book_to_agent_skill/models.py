@@ -102,6 +102,8 @@ class Classification:
     subcategory: Optional[str] = None
     alternative_categories: List[dict] = field(default_factory=list)
     tags: List[str] = field(default_factory=list)
+    language: Optional[str] = None
+    book_type: Optional[str] = None
 
     def to_dict(self) -> dict:
         d = {
@@ -112,5 +114,7 @@ class Classification:
             "alternative_categories": self.alternative_categories,
             "tags": self.tags,
             "method": self.method,
+            "language": self.language,
+            "book_type": self.book_type,
         }
         return {k: v for k, v in d.items() if v is not None}

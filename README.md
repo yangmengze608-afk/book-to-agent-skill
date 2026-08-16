@@ -4,10 +4,12 @@
 >
 > **One book → one skill by default.** Never a pile of chapter summaries, never a RAG bot.
 
-Give it a book (`.pdf` / `.epub` / `.txt` / `.md`). It classifies the book into a capability category, picks a **category-specific distillation strategy**, and produces **one Agent Skill** — a `SKILL.md` operating manual plus `references/` and an auto-generated eval suite — with source provenance for every load-bearing claim.
+Give it a book (`.pdf` / `.epub` / `.txt` / `.md`). It first applies a conservative **book-only scope gate** (obvious journal articles are rejected rather than silently treated as books), then classifies the book into a capability category, picks a **category-specific distillation strategy**, and produces **one Agent Skill** — a `SKILL.md` operating manual plus `references/` and an auto-generated eval-case suite — with source provenance for every load-bearing claim.
 
 ```text
 Thinking in Bets
+        ↓
+Scope Gate                 book / uncertain non-book → continue
         ↓
 Book Classification        decision-making → uncertainty (confidence 0.94)
         ↓
@@ -47,9 +49,11 @@ Classification is stored with an **honest confidence score** and alternatives �
 
 ## What this is / is not
 
-**Is:** a meta-skill + CLI pipeline: `Book → Classification → Distillation → ONE Agent Skill → Eval`.
+**Is:** a meta-skill + CLI pipeline: `Book → Scope Gate → Classification → Distillation → ONE Agent Skill → Eval Cases`.
 
 **Is not:** a PDF summarizer, chat-with-PDF, RAG chatbot, knowledge-graph platform, multi-user SaaS, or a "one chapter → one skill" splitter.
+
+V1 is intentionally **book-only**. A PDF extension does not imply a book: obvious scholarly articles are detected from multiple independent signals (for example DOI/article labels plus formal Abstract/Methods/Results/Discussion structure) and rejected before classification. Ambiguous documents are not auto-rejected; the agent still makes the final scope judgment.
 
 ---
 
@@ -58,16 +62,17 @@ Classification is stored with an **honest confidence score** and alternatives �
 ```text
 Book (.pdf/.epub/.txt/.md)
  ↓ 1. Ingest            extract text; detect scanned PDFs → "OCR required"
- ↓ 2. Structure         detect chapters (md headings / chapter patterns / synthetic chunks)
- ↓ 3. Classify          ONE primary category + subcategory + confidence + alternatives
- ↓ 4. Select strategy   category → taxonomy/distillation_profiles/<category>.yaml
- ↓ 5. Distill           whole book → SKILL.md + references/ (4 content types, provenance)
- ↓ 6. Eval              auto-generate ≥18 cases (trigger/anti-trigger/application/edge)
- ↓ 7. QA                validator: schemas, required sections, provenance, eval counts
- ↓ 8. Output            output/<category>/<slug>/
+ ↓ 2. Scope gate        conservatively reject obvious research articles
+ ↓ 3. Structure         detect chapters (md headings / chapter patterns / synthetic chunks)
+ ↓ 4. Classify          ONE primary category + subcategory + confidence + alternatives
+ ↓ 5. Select strategy   category → taxonomy/distillation_profiles/<category>.yaml
+ ↓ 6. Distill           whole book → SKILL.md + references/ (4 content types, provenance)
+ ↓ 7. Eval cases        auto-generate ≥18 cases (trigger/anti-trigger/application/edge)
+ ↓ 8. QA                validator: schemas, required sections, provenance, eval counts
+ ↓ 9. Output            output/<category>/<slug>/
 ```
 
-**Division of labor:** the CLI does deterministic work (extraction, structure detection, scaffolding, schema validation, installation). **The calling agent does the judgment work** (classification, distillation, eval authoring) following the binding prompts in `prompts/`. Optional LLM providers exist (`src/.../providers/`) but no API key is required to use this project — the default provider delegates reasoning to the agent running the skill.
+**Division of labor:** the CLI does deterministic work (extraction, scope checking, structure detection, scaffolding, schema validation, installation). **The calling agent does the judgment work** (classification, distillation, eval authoring) following the binding prompts in `prompts/`. Optional LLM providers exist (`src/.../providers/`) but no API key is required to use this project — the default provider delegates reasoning to the agent running the skill.
 
 ### Four content types (hard requirement)
 
@@ -127,7 +132,7 @@ Requires Python ≥ 3.9. Dependencies: `pypdf`, `PyYAML`, `jsonschema` — no LL
 The repo root is itself a skill (`SKILL.md`) — point an agent at it and say *"turn this book into an agent skill"*. Or drive the pipeline manually:
 
 ```bash
-# 1. Ingest + structure + heuristic pre-classification
+# 1. Ingest + scope check + structure + heuristic pre-classification
 book2skill init ./books/thinking-in-bets.epub --workspace ./ws
 
 # 2. (agent) Read ws/book/text.md, write ws/classification.yaml
@@ -159,6 +164,13 @@ Output: output/decision-making/thinking-in-bets/
 Eval: 18/18 cases generated, validation passed
 ```
 
+For an obvious research article, V1 stops before classification instead of pretending it is a book:
+
+```text
+error: out of scope: input appears to be a research-article (...).
+book-to-agent-skill V1 is intentionally book-only.
+```
+
 ## Output format
 
 ```text
@@ -169,65 +181,44 @@ output/<primary_category>/<slug>/
 └── evals/cases.yaml
 ```
 
-`SKILL.md` frontmatter follows the Agent Skills format (`name` + `description` with use-when triggers) so the skill drops straight into Claude Code / Codex-style skill directories.
-
 ## Eval
 
-Every generated skill must ship `evals/cases.yaml` with minimums — **5 positive trigger, 5 negative trigger, 5 application, 3 edge case** — validated against [schemas/eval_cases.schema.json](schemas/eval_cases.schema.json):
+V1 generates and validates an **eval-case suite**; it does not yet execute those cases against a model and judge the responses. That runtime benchmark layer is planned separately.
 
-- **Trigger** — the skill fires when the book's method applies
-- **Anti-trigger** — irrelevant questions don't invoke it (`must_avoid` required)
-- **Application** — the method actually solves a new problem
-- **Fidelity / Overreach** — edge cases probe for invented theory and over-absolute claims
+Each generated skill must include at least:
 
-```yaml
-- id: trigger-001
-  type: positive_trigger
-  prompt: >
-    我连续三次投资都赚钱了，是不是说明我的判断方法已经得到验证？
-  expected:
-    - distinguish outcome quality from decision quality (no resulting)
-    - point out the small sample size and what it can/cannot prove
-    - reason probabilistically instead of issuing a verdict
-  must_avoid:
-    - concluding "you are validated" or "you are just lucky"
-```
+- 5 positive trigger cases
+- 5 negative trigger / anti-trigger cases
+- 5 application cases
+- 3 edge cases
+
+The validator checks schema, counts, unique ids, and `must_avoid` behaviors on negative-trigger cases.
 
 ## Taxonomy
 
-One flat, extensible level of 16 categories in [taxonomy/categories.yaml](taxonomy/categories.yaml) (keywords + subcategories), each with a distillation profile in [taxonomy/distillation_profiles/](taxonomy/distillation_profiles/):
+V1 uses one required primary category plus optional subcategory and tags. The category selects the distillation profile; tags do not change the output contract.
 
-`decision-making` · `investing-finance` · `business-strategy` · `psychology-behavior` · `research-science` · `learning-education` · `writing` · `communication-negotiation` · `productivity` · `leadership-management` · `technology-engineering` · `creativity-design` · `philosophy-thinking` · `health-performance` · `reference-knowledge` · `other`
-
-Adding a category = add one entry to `categories.yaml` + one profile YAML. Profiles merge over [\_base.yaml](taxonomy/distillation_profiles/_base.yaml).
+See `taxonomy/categories.yaml` and `taxonomy/distillation_profiles/` for the machine-readable definitions.
 
 ## Limitations
 
-- **No OCR.** Scanned PDFs are detected and reported as `OCR required`; an extension point exists but V1 does not transcribe.
-- **Provenance granularity** is chapter/section/heading — page numbers are used only when the source format reliably provides them, never invented.
-- **Distillation quality depends on the reading agent.** The CLI enforces structure, schemas, provenance, and eval counts; it cannot fully machine-check intellectual fidelity.
-- **English/Chinese tested**; other languages work best with clean structure markers.
-- **One skill per book, by design** — multi-book fusion is explicitly out of scope for V1.
+- one book at a time; articles and multi-book fusion are out of scope
+- scanned/image-only PDFs require OCR before V1 can ingest them
+- the research-article scope detector is intentionally high-precision rather than exhaustive; ambiguous non-book documents may still require agent judgment
+- runtime eval execution/judging is not implemented yet
+- classification heuristics are hints only and are capped at low confidence
+- provider-backed one-shot generation depends on the configured model/provider quality
+- this is alpha software; generated skills should be reviewed before important use
 
 ## Prior Art
 
-- **[virgiliojr94/book-to-skill](https://github.com/virgiliojr94/book-to-skill)** and **[apple-ouyang/book-to-skill](https://github.com/apple-ouyang/book-to-skill)** — early explorations of turning book content into skills. What they get right: skill-format output, chapter-aware processing. Where this project differs: classification-driven distillation strategies (no single generic summarization prompt), hard four-type content labeling with provenance, and a built-in eval contract.
-- **OpenAI/Anthropic Agent Skills format** (`SKILL.md` + `references/` with progressive disclosure) — this project targets that format as its output and follows its conventions; no code copied.
-- Generic "chat with your PDF" / RAG tooling — different problem: retrieval answers questions about a book; this project produces a *reusable operating capability* distilled from it.
-
-No source code was copied from any third-party project; all code here is original (MIT).
+This project was informed by public book-to-skill experiments including `virgiliojr94/book-to-skill` and `apple-ouyang/book-to-skill`. The distinguishing V1 choices here are: classification before distillation, one whole-book skill by default, category-specific distillation profiles, explicit provenance/content types, and a deterministic validation gate.
 
 ## Roadmap
 
-```text
-V2: multi-book library
-V3: cross-book deduplication
-V4: book skill routing (which book-skill to invoke when several apply)
-V5: GUI/plugin
-```
-
-Deliberately **not** in V1: web UI, SaaS, accounts, vector DB, knowledge graph, multi-agent orchestration, auto-download of books, auto-splitting a book into many skills.
-
-## License
-
-[MIT](LICENSE). The example book *The Decision Notebook* is dedicated to the public domain (CC0). Do not commit copyrighted book texts into this repository — distillates are paraphrased transformations with citations, not compressed copies.
+- **V1.1**: real-book benchmark set + metadata and validator hardening
+- **V1.2**: execute eval cases against generated skills and score behavior
+- **V2**: multi-book library
+- **V3**: cross-book deduplication
+- **V4**: book-skill routing
+- **V5**: GUI/plugin

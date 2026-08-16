@@ -1,8 +1,9 @@
 """Distillation: profile selection, skill scaffolding, work orders."""
 
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
+from .classify import detect_language, infer_book_type
 from .models import Book
 from .taxonomy import Taxonomy
 from .util import now_iso, slugify, write_text, write_yaml, yaml_str
@@ -23,8 +24,8 @@ def build_book_yaml(
         "tags": cls.get("tags", []),
         "classification_confidence": cls["confidence"],
         "alternative_categories": cls.get("alternative_categories", []),
-        "book_type": "monograph",
-        "language": "en",
+        "book_type": cls.get("book_type") or infer_book_type(book),
+        "language": cls.get("language") or detect_language(book.text),
         "source_format": book.fmt,
         "distillation_version": distillation_version,
         "generated_at": now_iso(),
@@ -169,8 +170,10 @@ Classify the book, then write `classification.yaml` in the workspace root
 2. Pick exactly ONE primary category from taxonomy/categories.yaml:
    {", ".join(taxonomy.category_ids())}
 3. Judge honestly - confidence below 0.5 means genuinely torn.
-4. Write classification.yaml (fields per the schema; set method: agent).
-5. Run: `book2skill distill --workspace <workspace>` to validate and scaffold.
+4. Set `language` and `book_type` when you can determine them; use `und`
+   or `other` rather than guessing.
+5. Write classification.yaml (fields per the schema; set method: agent).
+6. Run: `book2skill distill --workspace <workspace>` to validate and scaffold.
 """
 
 

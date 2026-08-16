@@ -1,6 +1,6 @@
 ---
 name: book-to-agent-skill
-description: Turn a book (PDF/EPUB/TXT/MD) into ONE reusable Agent Skill - classify the book first, distill with a category-specific strategy second, with source provenance, four content-type tags, and an auto-generated eval suite. Use when the user asks to convert a book into an agent skill / claude skill / codex skill, distill a book's methods into a skill, or create a skill from a book.
+description: Turn a book (PDF/EPUB/TXT/MD) into ONE reusable Agent Skill - classify the book first, distill with a category-specific strategy second, with source provenance, four content-type tags, and an auto-generated eval case suite. Use when the user asks to convert a book into an agent skill / claude skill / codex skill, distill a book's methods into a skill, or create a skill from a book.
 ---
 
 # book-to-agent-skill (Meta Skill)
@@ -50,9 +50,11 @@ pre-classification. If ingestion reports `OCR required`, stop and tell the user.
    (16 categories; read the category descriptions if unsure).
 3. Judge honestly. Confidence >= 0.9 only if the book announces itself
    unmistakably; < 0.5 means genuinely torn - say so.
-4. Write `ws/classification.yaml` per `schemas/classification.schema.json`,
+4. Set `language` and `book_type` from the actual book. Use `und` / `other`
+   rather than guessing when either is genuinely unclear.
+5. Write `ws/classification.yaml` per `schemas/classification.schema.json`,
    with `method: agent` and a rationale grounded in the book's content.
-5. Validate + scaffold:
+6. Validate + scaffold:
 
 ```bash
 book2skill distill --workspace ./ws
@@ -77,11 +79,15 @@ Hard rules:
 - SKILL.md teaches doing (procedures, decision rules), references/ hold the
   depth. Keep SKILL.md under ~250 lines.
 
-### Phase 4 - Evals (you)
+### Phase 4 - Eval case authoring (you)
 
 Write `ws/skill/evals/cases.yaml` per `prompts/evals.md`:
 5 positive triggers, 5 negative triggers (with must_avoid), 5 applications,
 3 edge cases. Prompts must sound like real user messages.
+
+V1 validates the eval *case suite* (schema, counts, observable expectations).
+It does not yet execute the generated skill against those cases or produce a
+benchmark score. Runtime eval execution is a separate future layer.
 
 ### Phase 5 - Validate + Finalize (deterministic gate)
 
@@ -94,8 +100,10 @@ is installed to `output/<category>/<slug>/`.
 
 ### Phase 6 - Report to the user
 
-Report: the classification + confidence + one-line rationale, the output path,
-the eval count, validation status, and where the provenance lives.
+Report: the classification + confidence + one-line rationale, detected
+language/book_type, the output path, eval *case count*, validation status, and
+where the provenance lives. Do not imply the cases were executed unless an
+external eval runner actually ran them.
 
 ## Decision Rules
 
@@ -117,6 +125,8 @@ the eval count, validation status, and where the provenance lives.
 - Overreach (absolute claims from hedged books) -> check limitations.md covers
   contested claims; evals edge cases must probe this.
 - Splitting into multiple skills -> never; one book = one skill.
+- Metadata fabrication -> use `und` / `other` when language or book type is
+  not reliably identifiable, then let a better-informed agent override it.
 
 ## How to Handle Uncertainty
 
@@ -124,6 +134,8 @@ the eval count, validation status, and where the provenance lives.
 - Provenance: `source_confidence: low` when you cannot pin the location;
   never fabricate chapters either - fall back to `section "..."` from the
   structure map.
+- Metadata: conservative detection is a fallback, not ground truth; explicit
+  agent judgment from the full book wins.
 
 ## How to Use the References
 
@@ -137,7 +149,8 @@ the eval count, validation status, and where the provenance lives.
 
 Before finalize, verify:
 1. One skill, one category, honest confidence.
-2. SKILL.md would let a fresh agent *run the book's method* on a new problem.
-3. Every reference entry has a valid type + provenance/derivation link.
-4. 18+ eval cases covering trigger / anti-trigger / application / edge.
-5. No verbatim runs > 25 words; no chapter summaries anywhere.
+2. `language` / `book_type` are grounded or conservatively unknown.
+3. SKILL.md would let a fresh agent *run the book's method* on a new problem.
+4. Every reference entry has a valid type + provenance/derivation link.
+5. 18+ eval cases covering trigger / anti-trigger / application / edge.
+6. No verbatim runs > 25 words; no chapter summaries anywhere.
