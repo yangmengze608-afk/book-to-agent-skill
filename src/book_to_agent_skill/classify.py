@@ -15,10 +15,86 @@ from .paths import schemas_dir
 from .taxonomy import Taxonomy
 
 HEURISTIC_CONFIDENCE_CAP = 0.6
+BOOK_TYPES = {
+    "monograph",
+    "textbook",
+    "handbook",
+    "essay-collection",
+    "biography",
+    "narrative",
+    "other",
+}
 
 
 def _schema(name: str) -> dict:
     return json.loads((schemas_dir() / name).read_text(encoding="utf-8"))
+
+
+# ------------------------------------------------------------- book metadata
+
+def detect_language(text: str) -> str:
+    """Return a conservative ISO-like language hint.
+
+    V1 intentionally recognizes only languages that can be detected with high
+    confidence from script alone. Everything else is ``und`` (undetermined)
+    rather than a fabricated guess.
+    """
+    sample = (text or "")[:50000]
+    if not sample.strip():
+        return "und"
+
+    kana = len(re.findall(r"[\u3040-\u30ff]", sample))
+    hangul = len(re.findall(r"[\uac00-\ud7af]", sample))
+    cjk = len(re.findall(r"[\u3400-\u4dbf\u4e00-\u9fff]", sample))
+    latin = len(re.findall(r"[A-Za-z]", sample))
+
+    if kana >= 10:
+        return "ja"
+    if hangul >= 10:
+        return "ko"
+    # Chinese texts often contain English terms; require meaningful CJK signal
+    # rather than a majority of all alphabetic characters.
+    if cjk >= 20 and cjk >= latin * 0.20:
+        return "zh"
+    if latin >= 20:
+        return "en"
+    return "und"
+
+
+def infer_book_type(book: Book) -> str:
+    """Infer book type only when there is an explicit structural signal.
+
+    The fallback is ``other`` instead of pretending every book is a monograph.
+    The reasoning agent should replace this hint when it can identify the type
+    from the whole book.
+    """
+    title = (book.title_hint or book.path.stem or "").lower()
+    chapter_titles = " ".join(book.chapter_titles()).lower()
+    combined = f"{title} {chapter_titles}"
+
+    if re.search(r"\b(textbook|coursebook|workbook)\b", combined):
+        return "textbook"
+    if re.search(r"\b(handbook|manual|reference guide)\b", combined):
+        return "handbook"
+    if re.search(r"\b(autobiography|biography|memoir|life of)\b", combined):
+        return "biography"
+    if re.search(r"\b(collected essays|selected essays|essays)\b", combined):
+        return "essay-collection"
+    if re.search(r"\b(novel|short stories|stories|fiction)\b", combined):
+        return "narrative"
+
+    # Exercise/problem-set heavy structures are a useful textbook signal even
+    # when the title itself does not contain "textbook".
+    if book.chapters:
+        exercise_like = sum(
+            1
+            for c in book.chapters
+            if re.search(r"\b(exercises?|problem sets?|review questions?)\b", c.title.lower())
+        )
+        if len(book.chapters) >= 4 and exercise_like / len(book.chapters) >= 0.25:
+            return "textbook"
+
+    return "other"
 
 
 # ---------------------------------------------------------------- heuristic
@@ -43,10 +119,12 @@ def heuristic_classify(book: Book, taxonomy: Taxonomy) -> Classification:
         body = ch.body(book.text)
         if not body:
             continue
-        step = max(1, len(body) // 2)
         body_parts.append(body[:2000].lower())
         body_parts.append(body[len(body) // 2 : len(body) // 2 + 1500].lower())
     body = " ".join(body_parts)
+
+    language = detect_language(book.text)
+    book_type = infer_book_type(book)
 
     scores = {}
     for cat in taxonomy.categories:
@@ -75,6 +153,8 @@ def heuristic_classify(book: Book, taxonomy: Taxonomy) -> Classification:
             ),
             method="heuristic",
             tags=[],
+            language=language,
+            book_type=book_type,
         )
 
     share = top_score / (top_score + max(second_score, 1.0))
@@ -96,6 +176,8 @@ def heuristic_classify(book: Book, taxonomy: Taxonomy) -> Classification:
         method="heuristic",
         alternative_categories=alternatives,
         tags=[],
+        language=language,
+        book_type=book_type,
     )
 
 
