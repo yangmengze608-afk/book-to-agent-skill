@@ -16,6 +16,10 @@ from typing import List
 from .models import Book
 
 
+class ScopeError(Exception):
+    """Raised when an input is confidently outside the book-only V1 scope."""
+
+
 @dataclass(frozen=True)
 class ScopeAssessment:
     in_scope: bool
@@ -129,7 +133,7 @@ def enforce_book_scope(book: Book) -> ScopeAssessment:
     assessment = assess_document_scope(book)
     if not assessment.in_scope:
         evidence = "; ".join(assessment.evidence[:6])
-        raise ValueError(
+        raise ScopeError(
             f"out of scope: input appears to be a {assessment.kind} "
             f"(confidence {assessment.confidence}). {assessment.reason} "
             f"Evidence: {evidence}."
