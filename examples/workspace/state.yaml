@@ -1,0 +1,5 @@
+book_path: examples/books/the-decision-notebook.md
+slug: the-decision-notebook
+phase: done
+classification_method: agent
+output: examples/output/decision-making/the-decision-notebook

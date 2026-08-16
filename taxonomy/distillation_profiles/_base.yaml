@@ -1,0 +1,47 @@
+# Base distillation profile - inherited by every category profile.
+# Category profiles in this directory override or extend these defaults.
+# The goal of distillation is NEVER a summary. It is an operating manual
+# that makes an agent DO things the book's way.
+
+common:
+  # Minimum SKILL.md section set. Profiles may override the full list
+  # (skill_sections_override) or add entries (skill_sections_extra).
+  skill_sections:
+    - Purpose
+    - Use When
+    - Do Not Use When
+    - Core Mental Model
+    - Core Principles
+    - Operating Procedure
+    - Decision Rules
+    - Failure Modes
+    - How to Handle Uncertainty
+    - How to Use the References
+    - Final Quality Check
+
+  # Default references/ layout. Profiles may add extra files
+  # (extra_reference_files). Progressive disclosure: SKILL.md stays small;
+  # detail lives here.
+  reference_files:
+    principles.md: Core principles of the book, each tagged with content type and source.
+    frameworks.md: Named frameworks and models, with inputs, steps, and outputs.
+    procedures.md: Step-by-step procedures an agent can execute.
+    examples.md: Worked examples (paraphrased), showing the method applied.
+    limitations.md: Where the book's approach breaks, contested claims, and scope limits.
+    source-map.md: Map from every distilled item back to chapter/section, plus the content-type legend.
+
+  # Hard epistemic rules for every distillation.
+  epistemic_rules:
+    - Tag every entry as SOURCE FACT, AUTHOR CLAIM, EVIDENCE, or DISTILLER INFERENCE.
+    - Never present a DISTILLER INFERENCE as the author's own words.
+    - Attach source provenance (chapter / section / heading; pages only if the source format reliably provides them; never invent page numbers).
+    - Set source_confidence (high / medium / low) per entry.
+    - Paraphrase and operationalize; quote at most 25 consecutive words from the book.
+    - No chapter-by-chapter summaries anywhere in the output.
+
+  # Eval minimums (validated at finalize time).
+  eval_minimums:
+    positive_trigger: 5
+    negative_trigger: 5
+    application: 5
+    edge_case: 3

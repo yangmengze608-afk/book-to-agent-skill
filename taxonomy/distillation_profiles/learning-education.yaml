@@ -1,0 +1,28 @@
+category: learning-education
+label: Learning & Education
+
+focus:
+  - learning principles (how learning actually works, per the book)
+  - practice design (deliberate practice, spacing, interleaving, retrieval)
+  - skill acquisition stages (novice to expert paths)
+  - memory and retention mechanisms
+  - study procedures (concrete protocols an agent can prescribe)
+  - feedback loops (how to get and use feedback)
+  - transfer (when skills generalize and when they do not)
+  - myths the book debunks (learning styles, re-reading, highlighting)
+
+epistemic_guardrails:
+  - Separate lab findings from classroom folklore; tag each.
+  - Interventions should include their evidence strength and typical effect context.
+  - DISTILLER INFERENCE should be study plans and checks, not new learning theories.
+
+example_trigger_questions:
+  - "Build me a practice plan to learn Rust in three months."
+  - "Why does re-reading feel productive but fail?"
+  - "How should I space out flashcards for anatomy?"
+  - "I plateaued on the piano; how does the book say to break through?"
+  - "Does teaching the material actually help me learn?"
+
+example_anti_trigger_questions:
+  - "Find me an online course about photography."
+  - "What is the school district's enrollment policy?"

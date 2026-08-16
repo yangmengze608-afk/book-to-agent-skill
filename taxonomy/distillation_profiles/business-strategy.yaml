@@ -1,0 +1,28 @@
+category: business-strategy
+label: Business & Strategy
+
+focus:
+  - strategy frameworks (named models: positioning, disruption, VRIO-style analysis, jobs-to-be-done, etc.)
+  - sources of advantage (what creates and erodes durable advantage, per the book)
+  - business model patterns (how value is created, delivered, captured)
+  - analysis procedures (how to decompose an industry, a competitor, a market)
+  - decision heuristics for strategy choices (invest, exit, expand, defend)
+  - growth and innovation playbooks
+  - failure patterns (why companies lose, per the book's evidence)
+  - boundary conditions (firm size, industry, era where the advice holds)
+
+epistemic_guardrails:
+  - Case studies are EVIDENCE, not proof; note survivorship and selection bias in limitations.md.
+  - Distinguish the author's framework contributions from illustrative war stories.
+  - Mark era-specific advice (e.g., about technology or channels) with its context.
+
+example_trigger_questions:
+  - "Does this startup have a defensible moat?"
+  - "How should we think about entering this adjacent market?"
+  - "Is this incumbent actually at risk of disruption?"
+  - "Help me map this company's business model and its weak points."
+  - "What strategy questions should we answer before raising prices?"
+
+example_anti_trigger_questions:
+  - "Write our marketing copy for the new launch."
+  - "What were last quarter's revenues for this company?"

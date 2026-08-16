@@ -1,0 +1,29 @@
+category: research-science
+label: Research & Science
+
+focus:
+  - research principles (how good inquiry is designed, per the book)
+  - experimental design (controls, randomization, blinding, power)
+  - methodology (measurement, instruments, protocols, workflows)
+  - statistical reasoning (estimation, uncertainty, common test logic)
+  - confounds and threats to validity (what else could explain the result)
+  - evidence quality grading (how the book ranks kinds of evidence)
+  - reproducibility and replication concerns
+  - research workflow (from question to literature to design to write-up)
+
+epistemic_guardrails:
+  - Preserve exact epistemic status: what the evidence supports vs. what the author argues.
+  - Never upgrade a suggestive finding to an established fact.
+  - Keep statistical claims tied to their assumptions and sample contexts.
+  - Distinguish methodological rules (normative) from empirical findings (descriptive).
+
+example_trigger_questions:
+  - "Design a study to test whether this feature increases retention."
+  - "What are the confounds in comparing these two groups?"
+  - "How should I sample interviews so conclusions hold?"
+  - "Does this dataset's correlation imply causation here?"
+  - "What validity threats should we check before trusting this A/B result?"
+
+example_anti_trigger_questions:
+  - "Run a t-test on these numbers."  # (generic statistics help, not this book's method)
+  - "Who reviewed this paper for the journal?"

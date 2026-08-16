@@ -1,0 +1,29 @@
+category: decision-making
+label: Decision Making
+
+# What the distiller must extract from a decision-making book.
+focus:
+  - decision principles (timeless rules the author argues for)
+  - decision frameworks (named models with inputs, steps, outputs)
+  - uncertainty handling (probabilistic thinking, confidence levels, scenarios)
+  - cognitive biases the book targets, and their counter-moves
+  - decision procedures (step-by-step processes an agent can run)
+  - evidence updating (how to change beliefs when new information arrives)
+  - failure modes (classic ways decisions go wrong, per the book)
+  - when to use / not use the book's approach
+
+epistemic_guardrails:
+  - Keep decisions and outcomes separate; never let the skill claim an outcome proves a decision was right.
+  - Preserve probability language ("likely", "x% confident") instead of false certainty.
+  - Distinguish the author's prescriptive advice from descriptions of what people actually do.
+
+example_trigger_questions:
+  - "I made three profitable trades in a row - is my strategy validated?"
+  - "Should I take the job offer in another city, given the recession risk?"
+  - "We can't agree on whether to ship now or polish for six weeks. How do we decide?"
+  - "How confident should I be that this launch succeeds?"
+  - "My last two hires failed. What does that evidence actually tell me?"
+
+example_anti_trigger_questions:
+  - "Summarize chapter 4 of this book."
+  - "What year was the author born?"

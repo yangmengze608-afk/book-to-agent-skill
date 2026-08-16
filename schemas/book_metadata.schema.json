@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/yangmengze608-afk/book-to-agent-skill/schemas/book_metadata.schema.json",
+  "title": "BOOK.yaml metadata",
+  "description": "Metadata sidecar for one generated book skill. Never contains book content.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "author",
+    "primary_category",
+    "tags",
+    "classification_confidence",
+    "book_type",
+    "language",
+    "source_format",
+    "distillation_version",
+    "generated_at",
+    "slug",
+    "source_metadata"
+  ],
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "author": { "type": "string" },
+    "primary_category": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "subcategory": { "type": ["string", "null"] },
+    "tags": { "type": "array", "items": { "type": "string", "maxLength": 60 }, "maxItems": 12 },
+    "classification_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "alternative_categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "confidence"],
+        "properties": {
+          "category": { "type": "string" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "book_type": {
+      "type": "string",
+      "enum": ["monograph", "textbook", "handbook", "essay-collection", "biography", "narrative", "other"]
+    },
+    "language": { "type": "string", "default": "en" },
+    "source_format": { "type": "string", "enum": ["pdf", "epub", "txt", "md"] },
+    "distillation_version": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+$" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "maxLength": 64 },
+    "source_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["original_path", "word_count", "chapter_count", "ocr_required"],
+      "properties": {
+        "original_path": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "word_count": { "type": "integer", "minimum": 0 },
+        "chapter_count": { "type": "integer", "minimum": 0 },
+        "ocr_required": { "type": "boolean" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

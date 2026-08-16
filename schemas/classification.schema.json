@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/yangmengze608-afk/book-to-agent-skill/schemas/classification.schema.json",
+  "title": "Book classification",
+  "description": "Result of classifying one book against taxonomy/categories.yaml. Primary category must be a valid category id (cross-checked against the taxonomy at validation time).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["primary_category", "confidence", "rationale", "method"],
+  "properties": {
+    "primary_category": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Exactly one taxonomy category id."
+    },
+    "subcategory": {
+      "type": ["string", "null"],
+      "description": "Optional subcategory from the category's list, or free-form if the category allows it."
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Honest confidence in the primary category. Heuristic methods are capped at 0.6."
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Why this category fits, grounded in the book's actual content."
+    },
+    "alternative_categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["category", "confidence"],
+        "properties": {
+          "category": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+          "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 60 },
+      "maxItems": 12
+    },
+    "method": {
+      "type": "string",
+      "enum": ["heuristic", "agent", "openai", "anthropic"],
+      "description": "Who produced this classification."
+    }
+  }
+}

@@ -1,0 +1,30 @@
+category: investing-finance
+label: Investing & Finance
+
+focus:
+  - investment philosophy (the author's core beliefs about where returns come from)
+  - thesis construction (how to build and state an investment thesis)
+  - valuation logic (how the author judges what something is worth)
+  - risk framework (definitions of risk, drawdown, ruin, correlation)
+  - position and risk rules (sizing, limits, diversification, cash)
+  - market assumptions (efficiency, participant behavior, cycles)
+  - decision process (research workflow, checklists, journals, review loops)
+  - warning signs (red flags in businesses, managers, and own behavior)
+  - common mistakes the book explicitly warns against
+
+epistemic_guardrails:
+  - The skill teaches how the AUTHOR invests and thinks; it must not present that method as guaranteed or universally superior.
+  - Separate descriptive claims about markets from the author's normative advice.
+  - Never turn book guidance into specific buy/sell advice; keep it at the framework level.
+  - Mark evidence drawn from backtests or survivorship-biased examples as EVIDENCE with its limits noted in limitations.md.
+
+example_trigger_questions:
+  - "How should I think about position sizing if I'm uncertain?"
+  - "What would a value investor check before buying this company?"
+  - "How do I write down an investment thesis so I can review it later?"
+  - "What risk rules should a portfolio have before adding a concentrated bet?"
+  - "The market dropped 20%; how does the book's framework tell me to respond?"
+
+example_anti_trigger_questions:
+  - "Which stock should I buy today?"
+  - "What is the current price of Apple shares?"

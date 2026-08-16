@@ -1,0 +1,27 @@
+category: philosophy-thinking
+label: Philosophy & Thinking
+
+focus:
+  - central questions the book engages
+  - core concepts and distinctions the author draws
+  - arguments: premises, inferences, and the author's conclusions
+  - competing positions the book presents, steelmanned
+  - thinking procedures (Socratic questioning, thought experiments, argument mapping)
+  - implications for judgment and conduct
+  - objections and limitations the book acknowledges
+
+epistemic_guardrails:
+  - NEVER present contested philosophical positions as settled fact.
+  - Attribute each position to its tradition or philosopher; the skill teaches the debate, not a doctrine.
+  - DISTILLER INFERENCE may operationalize positions into reasoning moves, never settle the debate.
+
+example_trigger_questions:
+  - "Steelman both sides of the free speech argument we're having."
+  - "What distinctions does the book draw between knowledge and belief?"
+  - "Run a Socratic examination of my claim that 'AI art is not real art'."
+  - "What would a virtue ethicist say about white lies in referrals?"
+  - "Map the premises and inferences in this opinion piece."
+
+example_anti_trigger_questions:
+  - "Tell me the one true answer to the trolley problem."
+  - "Summarize the history of ancient Rome."  # (history, not this book's method)

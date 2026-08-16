@@ -1,0 +1,27 @@
+category: reference-knowledge
+label: Reference & Knowledge
+
+focus:
+  - knowledge organization (how the book structures its domain)
+  - lookup procedures (how to find the right entry/section for a problem)
+  - core facts and formulas with their applicability conditions
+  - decision tables and quick-reference rules
+  - cross-entry relationships (what depends on what)
+  - gaps and caveats (where the reference is silent or dated)
+
+epistemic_guardrails:
+  - Reference books age: stamp entries with the book's edition-era context.
+  - Do not silently merge the book's facts with the agent's world knowledge; keep the book's claims attributed.
+  - Prefer pointers and paraphrase over wholesale copying of entries.
+
+skill_sections_extra:
+  - How to Look Things Up
+
+example_trigger_questions:
+  - "Which section of the method covers error handling for this case?"
+  - "Give me the quick-reference table for choosing between these approaches."
+  - "What does the reference say about X and where does it live in the book?"
+
+example_anti_trigger_questions:
+  - "Read chapter 7 aloud to me."
+  - "What is the ISBN of this book?"

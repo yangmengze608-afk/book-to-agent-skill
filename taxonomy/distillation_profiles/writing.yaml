@@ -1,0 +1,31 @@
+category: writing
+label: Writing
+
+focus:
+  - writing principles (the author's rules of thumb, with their rationale)
+  - writing workflow (drafting habits, revision passes, separation of drafting and editing)
+  - editing rules (sentence-level and paragraph-level fixes)
+  - structural choices (openings, ordering, endings, transitions)
+  - style decisions (voice, tone, register, when to break rules)
+  - common mistakes with fixes
+  - before/after patterns (weak vs. strong, paraphrased)
+  - checklists (pre-send / pre-publish review lists)
+
+extra_reference_files:
+  before-after.md: Paraphrased weak-vs-strong passage pairs, each labeled with the principle applied.
+
+epistemic_guardrails:
+  - Style rules are the author's prescriptions, not laws; keep them as AUTHOR CLAIM unless grounded in reader evidence.
+  - Before/after examples must be paraphrased or original, never verbatim book passages.
+  - The skill should apply rules during drafting/editing help, not just recite them.
+
+example_trigger_questions:
+  - "Tighten this paragraph without losing the voice."
+  - "How do I structure the opening of a technical blog post?"
+  - "What revision pass should I run first?"
+  - "Is this sentence too loaded? How would the book fix it?"
+  - "Draft an outline for an essay about my failure story."
+
+example_anti_trigger_questions:
+  - "Write a poem in the style of Rilke."  # (outside the book's method)
+  - "Check my citation formatting against APA 7."

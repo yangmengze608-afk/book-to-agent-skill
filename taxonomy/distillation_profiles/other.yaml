@@ -1,0 +1,23 @@
+category: other
+label: Other
+
+# Fallback profile. Used when classification cannot place the book in a
+# specific category, or confidence is genuinely low. Uses only the base
+# profile's sections and rules; the distiller should note in limitations.md
+# that a more specific category would produce a better skill.
+
+focus:
+  - the book's central claim and method, stated plainly
+  - whatever reusable procedures, principles, or frameworks it contains
+  - explicit boundaries of the book's advice
+  - a recommendation to re-classify if the content clearly fits another category
+
+epistemic_guardrails:
+  - Say what the book actually argues; resist forcing a framework onto it.
+  - If the book fits no extraction pattern, produce a small honest skill rather than an inflated one.
+
+example_trigger_questions:
+  - "What is this book's core method and when does it apply?"
+
+example_anti_trigger_questions:
+  - "Anything goes - do not over-trigger this profile."
