@@ -1,0 +1,111 @@
+version: 1
+skill: image-style-clone-skill
+cases:
+  - id: trigger-001
+    type: positive_trigger
+    prompt: "我给你 6 张同一个系列的图，把上面的抖音 UI 去掉，总结它们共同画风，然后按这个画风做一只在地铁里睡觉的橘猫。"
+    expected:
+      - normalize screenshot contamination
+      - build per-image evidence before aggregate style DNA
+      - separate cat/subway content from reference style
+      - output final prompt and generate if image tool exists
+
+  - id: trigger-002
+    type: positive_trigger
+    prompt: "这些图都是一个账号发的，我想把视觉 DNA 提出来，以后我输入任何场景都能按这个风格出图。"
+    expected:
+      - aggregate reusable content-independent style DNA
+      - identify invariants variables and outliers
+      - provide prompt compiler behavior
+
+  - id: trigger-003
+    type: positive_trigger
+    prompt: "先把 8 张截图里的文字、按钮和边框都忽略，再给每张做 JSON，最后给我一个统一风格 prompt。"
+    expected:
+      - follow normalization -> per-image JSON -> aggregate -> prompt sequence
+
+  - id: trigger-004
+    type: positive_trigger
+    prompt: "参考图画风不变，主题从夜晚城市改成白天海边，人物换成一只巨大橘猫。"
+    expected:
+      - preserve style dimensions except explicit content/time changes
+      - do not preserve original city-specific content
+
+  - id: trigger-005
+    type: positive_trigger
+    prompt: "这 10 张里可能有两张不是一个画风，你自己判断，别平均到一起。"
+    expected:
+      - cluster references
+      - isolate outliers or alternate style clusters
+
+  - id: anti-001
+    type: negative_trigger
+    prompt: "帮我读一下这张截图上的英文是什么意思。"
+    must_avoid:
+      - invoking style distillation workflow
+      - generating an image
+
+  - id: anti-002
+    type: negative_trigger
+    prompt: "给我设计一个登录页 UI，照着这张 App 截图的布局做。"
+    must_avoid:
+      - stripping the UI as contamination
+      - treating the task as underlying image-style cloning
+
+  - id: anti-003
+    type: negative_trigger
+    prompt: "把这张照片里的人移到左边。"
+    must_avoid:
+      - running multi-image style aggregation
+
+  - id: anti-004
+    type: negative_trigger
+    prompt: "没有参考图，给我做一个治愈系 3D 猫。"
+    must_avoid:
+      - claiming style DNA was extracted from references
+
+  - id: fidelity-001
+    type: application
+    prompt: "5 张参考图里都有兔子，但我现在要画一条狗。"
+    expected:
+      - treat rabbit identity as content unless evidence proves a broader shape rule
+      - preserve shared rendering/composition/lighting style
+      - generate a dog, not a rabbit
+
+  - id: fidelity-002
+    type: application
+    prompt: "其中一张用了超广角低机位，另外 7 张都是平视中景。"
+    expected:
+      - classify ultra-wide low-angle as variable or outlier
+      - keep eye-level medium framing as stronger consensus
+
+  - id: fidelity-003
+    type: application
+    prompt: "参考图都是夜景，但我要保持其他风格不变，改成正午。"
+    expected:
+      - honor daylight override
+      - preserve unrelated style invariants
+
+  - id: edge-001
+    type: edge_case
+    prompt: "三张图，一张水墨、一张 3D、一张写实摄影，给我统一画风。"
+    expected:
+      - refuse to fake a high-confidence consensus
+      - identify incompatible clusters
+      - choose only if user intent or dominant evidence supports one
+
+  - id: edge-002
+    type: edge_case
+    prompt: "截图 UI 挡住了差不多一半画面，你把挡住的部分也总结一下。"
+    expected:
+      - mark occluded regions unknown
+      - not hallucinate hidden visual evidence
+      - lower confidence
+
+  - id: edge-003
+    type: edge_case
+    prompt: "我只给一张参考图，但你要给我总结整个系列绝对稳定的风格。"
+    expected:
+      - provide single-image analysis if useful
+      - explicitly keep confidence low
+      - avoid claiming series-level invariants
