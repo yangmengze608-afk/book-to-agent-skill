@@ -1,233 +1,179 @@
-# book-to-agent-skill
+<div align="center">
 
-> **Turn a book into one reusable Agent Skill — classify first, distill second.**
->
-> **One book → one skill by default.** Never a pile of chapter summaries, never a RAG bot.
+# Ykmmz Agent Skills
 
-Give it a book (`.pdf` / `.epub` / `.txt` / `.md`). It classifies the book into a capability category, picks a **category-specific distillation strategy**, and produces **one Agent Skill** — a `SKILL.md` operating manual plus `references/` and an auto-generated eval suite — with source provenance for every load-bearing claim.
+**把真正可复用的方法，做成 Agent 能稳定调用的能力。**
+
+**简体中文** · [English](./README_EN.md)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Agent Skills](https://img.shields.io/badge/Agent-Skills-black)](#skills)
+
+</div>
+
+---
+
+## 这是什么？
+
+**Ykmmz Agent Skills** 是一个持续扩展的开源 Agent Skill 仓库。
+
+这里不想堆一堆零散 Prompt。我的目标是把一种真正可重复的方法，沉淀成 Agent 可以**触发、执行、校验、复用**的能力。
+
+一个值得长期保留的 Skill，理想情况下应该包含：
+
+- 清楚、可执行的 `SKILL.md`；
+- 明确的 Use / Do Not Use 边界；
+- 必要时配套 schema、脚本或确定性流程；
+- progressive disclosure：主 Skill 保持精炼，深度内容放进 `references/`；
+- 能测试触发、应用、忠实度与边界情况的 eval；
+- 对不确定性诚实，而不是为了完整感去编造结论。
+
+## Skills
+
+| Skill | 能做什么 | 状态 |
+|---|---|---|
+| **Book → Agent Skill** | 把一本书蒸馏成一个可复用 Agent Skill：先分类，再按类别选择蒸馏策略，同时保留来源与 eval。 | ✅ 可用 |
+| **Image Style Clone** | 清洗参考图 → 逐图 JSON → 提取跨图 Style DNA → 注入新场景 → 编译同风格生图 Prompt。 | 🧪 正在并入主仓库 |
+
+> 这个仓库最初是 `book-to-agent-skill`。现在正在升级成我的通用 Agent Skill 总库。重构过程中会优先保证原有路径和能力不被随意破坏。
+
+---
+
+# Book → Agent Skill
+
+> **一本书 → 一个可复用 Skill。先分类，再蒸馏。**
+
+输入一本书（`.pdf` / `.epub` / `.txt` / `.md`），先判断它真正提供的**能力类型**，再调用对应类别的蒸馏策略，最终生成一个 Agent Skill，而不是一本“高级摘要”。
 
 ```text
-Thinking in Bets
-        ↓
-Book Classification        decision-making → uncertainty (confidence 0.94)
-        ↓
-Distillation Strategy      decision principles, frameworks, uncertainty handling, biases…
-        ↓
-output/decision-making/thinking-in-bets/
-├── SKILL.md               ← teaches an agent to DECIDE the way the book teaches
-├── BOOK.yaml
-├── references/            ← progressive disclosure: depth lives here
-└── evals/cases.yaml       ← 18 cases: trigger / anti-trigger / application / edge
+一本书
+  ↓
+能力分类
+  ↓
+类别专属蒸馏策略
+  ↓
+ONE reusable Agent Skill
+  ├── SKILL.md
+  ├── BOOK.yaml
+  ├── references/
+  └── evals/cases.yaml
 ```
 
-The success test: a generated skill must make an agent **act according to the book's method** — not merely *know what the book said*.
+真正的成功标准不是“它知不知道这本书讲了什么”，而是：
 
----
+> **一个新的 Agent，能不能按照这本书的方法去处理一个新的问题。**
 
-## Why classification comes first
+## 为什么一定要先分类？
 
-A decision-making book, a psychology book, and an engineering book should **not** be distilled with the same "summarize the key points" prompt. Each category yields a different kind of capability:
+因为决策类书、心理学书、工程书，本来就不应该使用同一个“总结核心观点”模板。
 
-| Category | The skill extracts |
-|---|---|
-| `decision-making` | decision principles, frameworks, uncertainty handling, biases, procedures, failure modes |
-| `investing-finance` | investment philosophy, thesis construction, risk framework, position rules, warning signs |
-| `psychology-behavior` | mechanisms, constructs, causal explanations, evidence quality, interventions, misconceptions |
-| `research-science` | methodology, experimental design, validity threats, statistical reasoning, reproducibility |
-| `technology-engineering` | architecture, design principles, implementation patterns, debugging procedures, anti-patterns |
-| `writing` | principles, workflow, editing rules, before/after patterns, checklists |
-| … 16 categories total | see [Taxonomy](#taxonomy) |
+当前 taxonomy 包含 16 个能力类别：
 
-Classification is stored with an **honest confidence score** and alternatives — if the book is genuinely torn between two categories, the skill says so instead of pretending certainty. The chosen category then selects a [distillation profile](taxonomy/distillation_profiles/) that defines:
+`decision-making` · `investing-finance` · `business-strategy` · `psychology-behavior` · `research-science` · `learning-education` · `writing` · `communication-negotiation` · `productivity` · `leadership-management` · `technology-engineering` · `creativity-design` · `philosophy-thinking` · `health-performance` · `reference-knowledge` · `other`
 
-- what to extract (focus areas),
-- epistemic guardrails (e.g. psychology: never state a theory as absolute fact; separate author opinion from cited evidence),
-- required sections for `SKILL.md`,
-- example trigger / anti-trigger questions for evals.
+每个类别都会调用 `taxonomy/distillation_profiles/` 下自己的蒸馏 profile，决定：
 
-## What this is / is not
+- 该重点提取什么；
+- 哪些地方必须保持认识论上的谨慎；
+- `SKILL.md` 必须有哪些部分；
+- eval 应该重点测试什么。
 
-**Is:** a meta-skill + CLI pipeline: `Book → Classification → Distillation → ONE Agent Skill → Eval`.
+## 四类内容标签
 
-**Is not:** a PDF summarizer, chat-with-PDF, RAG chatbot, knowledge-graph platform, multi-user SaaS, or a "one chapter → one skill" splitter.
+为了避免 Agent 把“自己的推断”伪装成“作者原话”，references 中的内容明确分成：
 
----
+- `SOURCE FACT` —— 来源明确陈述的事实或方法；
+- `AUTHOR CLAIM` —— 作者自己的主张、建议或判断；
+- `EVIDENCE` —— 来源中引用或依赖的证据；
+- `DISTILLER INFERENCE` —— 蒸馏过程中为了执行而得到的推论，必须说明它从哪里推出来。
 
-## Architecture
+## 架构
 
 ```text
 Book (.pdf/.epub/.txt/.md)
- ↓ 1. Ingest            extract text; detect scanned PDFs → "OCR required"
- ↓ 2. Structure         detect chapters (md headings / chapter patterns / synthetic chunks)
- ↓ 3. Classify          ONE primary category + subcategory + confidence + alternatives
- ↓ 4. Select strategy   category → taxonomy/distillation_profiles/<category>.yaml
- ↓ 5. Distill           whole book → SKILL.md + references/ (4 content types, provenance)
- ↓ 6. Eval              auto-generate ≥18 cases (trigger/anti-trigger/application/edge)
- ↓ 7. QA                validator: schemas, required sections, provenance, eval counts
- ↓ 8. Output            output/<category>/<slug>/
+ ↓ 1. Ingest            提取文本
+ ↓ 2. Structure         识别章节与结构
+ ↓ 3. Classify          判断主能力类别
+ ↓ 4. Select strategy   选择类别专属蒸馏策略
+ ↓ 5. Distill           生成 SKILL + references
+ ↓ 6. Eval              自动构造测试案例
+ ↓ 7. QA                schema / 结构 / 来源检查
+ ↓ 8. Output            输出可安装 Skill
 ```
 
-**Division of labor:** the CLI does deterministic work (extraction, structure detection, scaffolding, schema validation, installation). **The calling agent does the judgment work** (classification, distillation, eval authoring) following the binding prompts in `prompts/`. Optional LLM providers exist (`src/.../providers/`) but no API key is required to use this project — the default provider delegates reasoning to the agent running the skill.
+CLI 负责更确定性的部分：抽取、结构识别、脚手架、schema 校验、安装。
 
-### Four content types (hard requirement)
+Agent 负责真正需要判断力的部分：分类、蒸馏、规则提炼、eval 编写。
 
-Every reference entry is tagged, so inferences are never passed off as the author's words:
-
-- `SOURCE FACT` — the book states this (description of the method)
-- `AUTHOR CLAIM` — the author's prescription or assertion
-- `EVIDENCE` — evidence the author cites
-- `DISTILLER INFERENCE` — operational rule derived by the distiller; must carry `derived_from` links, never a fabricated source
-
-### Source provenance
-
-```yaml
-- type: AUTHOR CLAIM
-  source: chapter 6, section "Premortems and Tripwires"
-  source_confidence: high
-```
-
-Chapter/section/heading-based (no fabricated page numbers). `source_confidence: high | medium | low` when the location can't be pinned precisely.
-
----
-
-## Example
-
-A complete, copyright-safe example ships in the repo: [examples/books/the-decision-notebook.md](examples/books/the-decision-notebook.md) — an original CC0 mini-book on decision-making — and its fully generated skill in [examples/output/decision-making/the-decision-notebook/](examples/output/decision-making/the-decision-notebook/):
-
-```text
-examples/output/decision-making/the-decision-notebook/
-├── SKILL.md               operating manual: Purpose / Use When / Core Mental Model /
-│                          Operating Procedure / Decision Rules / Failure Modes …
-├── BOOK.yaml              metadata: category, tags, confidence, provenance stats
-├── references/
-│   ├── principles.md      P1–P11, each typed + sourced
-│   ├── frameworks.md      named frameworks w/ inputs, steps, outputs
-│   ├── procedures.md      executable step-by-step procedures
-│   ├── examples.md        worked applications to new situations
-│   ├── limitations.md     where the method breaks
-│   └── source-map.md      entry → chapter map + content-type legend
-└── evals/cases.yaml       18 cases
-```
-
-*(Conceptual examples like "Thinking in Bets" appear in docs for illustration only; no copyrighted book text is included in this repository.)*
-
-## Installation
+## 安装
 
 ```bash
 git clone https://github.com/yangmengze608-afk/book-to-agent-skill.git
 cd book-to-agent-skill
-python -m venv venv && source venv/bin/activate   # Windows: venv\Scripts\activate
+python -m venv venv && source venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-Requires Python ≥ 3.9. Dependencies: `pypdf`, `PyYAML`, `jsonschema` — no LLM API key required.
+> 仓库刚完成 rename。GitHub 会对旧地址做重定向；等连接器刷新出新的 canonical repo 名后，我会把这里的安装命令一并切到最终地址。
 
-## Usage
+需要 Python ≥ 3.9。主要依赖：`pypdf`、`PyYAML`、`jsonschema`。
 
-The repo root is itself a skill (`SKILL.md`) — point an agent at it and say *"turn this book into an agent skill"*. Or drive the pipeline manually:
+## 使用
 
 ```bash
-# 1. Ingest + structure + heuristic pre-classification
-book2skill init ./books/thinking-in-bets.epub --workspace ./ws
+# 1. 提取 + 建立结构 + 预分类
+book2skill init ./book.epub --workspace ./ws
 
-# 2. (agent) Read ws/book/text.md, write ws/classification.yaml
-#    → then validate + scaffold the skill dir with the category's profile
+# 2. Agent 写入 classification.yaml
 book2skill distill --workspace ./ws
 
-# 3. (agent) Fill ws/skill/SKILL.md, references/, evals/cases.yaml
-#    per prompts/ and the selected distillation profile
-
-# 4. Validate + install to output/
+# 3. Agent 完成 SKILL.md / references / evals
 book2skill finalize --workspace ./ws
 ```
 
-One-shot convenience (stops where agent reasoning is needed):
+快捷入口：
 
 ```bash
 book2skill run ./book.epub --workspace ./ws
-book2skill doctor        # check environment/taxonomy/schemas
+book2skill doctor
 ```
 
-Typical output:
+## Eval Contract
 
-```text
-Classification:
-  Decision Making -> uncertainty (confidence 0.94, method agent)
-  alternative: psychology-behavior (0.63)
-Generating skill...
-Output: output/decision-making/thinking-in-bets/
-Eval: 18/18 cases generated, validation passed
-```
+每个生成出来的 book skill 至少包含 18 个 eval：
 
-## Output format
+- 5 个 positive trigger；
+- 5 个 negative trigger；
+- 5 个 application；
+- 3 个 edge / fidelity case。
 
-```text
-output/<primary_category>/<slug>/
-├── SKILL.md          # operating manual, not a book report (≤ ~250 lines)
-├── BOOK.yaml         # title/author/category/tags/confidence/language/generated_at…
-├── references/       # progressive disclosure — read on demand
-└── evals/cases.yaml
-```
+目的不是“为了有测试而测试”，而是检查：
 
-`SKILL.md` frontmatter follows the Agent Skills format (`name` + `description` with use-when triggers) so the skill drops straight into Claude Code / Codex-style skill directories.
+1. 该触发的时候能不能触发；
+2. 不该触发的时候会不会乱入；
+3. 真遇到新问题时能不能执行书里的方法；
+4. 会不会夸大、杜撰、越过来源证据。
 
-## Eval
+## 我希望这个仓库坚持的原则
 
-Every generated skill must ship `evals/cases.yaml` with minimums — **5 positive trigger, 5 negative trigger, 5 application, 3 edge case** — validated against [schemas/eval_cases.schema.json](schemas/eval_cases.schema.json):
-
-- **Trigger** — the skill fires when the book's method applies
-- **Anti-trigger** — irrelevant questions don't invoke it (`must_avoid` required)
-- **Application** — the method actually solves a new problem
-- **Fidelity / Overreach** — edge cases probe for invented theory and over-absolute claims
-
-```yaml
-- id: trigger-001
-  type: positive_trigger
-  prompt: >
-    我连续三次投资都赚钱了，是不是说明我的判断方法已经得到验证？
-  expected:
-    - distinguish outcome quality from decision quality (no resulting)
-    - point out the small sample size and what it can/cannot prove
-    - reason probabilistically instead of issuing a verdict
-  must_avoid:
-    - concluding "you are validated" or "you are just lucky"
-```
-
-## Taxonomy
-
-One flat, extensible level of 16 categories in [taxonomy/categories.yaml](taxonomy/categories.yaml) (keywords + subcategories), each with a distillation profile in [taxonomy/distillation_profiles/](taxonomy/distillation_profiles/):
-
-`decision-making` · `investing-finance` · `business-strategy` · `psychology-behavior` · `research-science` · `learning-education` · `writing` · `communication-negotiation` · `productivity` · `leadership-management` · `technology-engineering` · `creativity-design` · `philosophy-thinking` · `health-performance` · `reference-knowledge` · `other`
-
-Adding a category = add one entry to `categories.yaml` + one profile YAML. Profiles merge over [\_base.yaml](taxonomy/distillation_profiles/_base.yaml).
-
-## Limitations
-
-- **No OCR.** Scanned PDFs are detected and reported as `OCR required`; an extension point exists but V1 does not transcribe.
-- **Provenance granularity** is chapter/section/heading — page numbers are used only when the source format reliably provides them, never invented.
-- **Distillation quality depends on the reading agent.** The CLI enforces structure, schemas, provenance, and eval counts; it cannot fully machine-check intellectual fidelity.
-- **English/Chinese tested**; other languages work best with clean structure markers.
-- **One skill per book, by design** — multi-book fusion is explicitly out of scope for V1.
-
-## Prior Art
-
-- **[virgiliojr94/book-to-skill](https://github.com/virgiliojr94/book-to-skill)** and **[apple-ouyang/book-to-skill](https://github.com/apple-ouyang/book-to-skill)** — early explorations of turning book content into skills. What they get right: skill-format output, chapter-aware processing. Where this project differs: classification-driven distillation strategies (no single generic summarization prompt), hard four-type content labeling with provenance, and a built-in eval contract.
-- **OpenAI/Anthropic Agent Skills format** (`SKILL.md` + `references/` with progressive disclosure) — this project targets that format as its output and follows its conventions; no code copied.
-- Generic "chat with your PDF" / RAG tooling — different problem: retrieval answers questions about a book; this project produces a *reusable operating capability* distilled from it.
-
-No source code was copied from any third-party project; all code here is original (MIT).
+1. **能力 > 摘要** —— Skill 应该让 Agent 会做事，而不是多背了一份笔记。
+2. **证据 > 感觉** —— 关键结论尽量可追溯。
+3. **诚实表达不确定性** —— 不为了“完整”假装确定。
+4. **Progressive Disclosure** —— `SKILL.md` 保持可执行，深度内容下沉到 `references/`。
+5. **默认带 Eval** —— Markdown 写得漂亮不等于 Skill 真能工作。
+6. **一个 Skill 一个清楚的工作** —— 触发条件与边界必须容易理解。
 
 ## Roadmap
 
-```text
-V2: multi-book library
-V3: cross-book deduplication
-V4: book skill routing (which book-skill to invoke when several apply)
-V5: GUI/plugin
-```
-
-Deliberately **not** in V1: web UI, SaaS, accounts, vector DB, knowledge graph, multi-agent orchestration, auto-download of books, auto-splitting a book into many skills.
+- [x] Book → Agent Skill
+- [x] Image Style Clone 原型
+- [ ] 重构为 `skills/<skill-name>/` 的统一多 Skill 目录
+- [ ] Skill 索引与统一安装规范
+- [ ] Cross-skill routing
+- [ ] 持续加入更多中文优先、真正可执行的 Agent Skills
 
 ## License
 
-[MIT](LICENSE). The example book *The Decision Notebook* is dedicated to the public domain (CC0). Do not commit copyrighted book texts into this repository — distillates are paraphrased transformations with citations, not compressed copies.
+MIT，见 [LICENSE](./LICENSE)。
+
+对于由书籍蒸馏出来的 Skill，不要把受版权保护的完整书籍文本提交到仓库中；蒸馏结果应当是转化性的、改写后的，并尽可能保留来源信息。
