@@ -1,233 +1,143 @@
-# book-to-agent-skill
+# Image Style Clone Skill｜图片风格蒸馏与复刻
 
-> **Turn a book into one reusable Agent Skill — classify first, distill second.**
->
-> **One book → one skill by default.** Never a pile of chapter summaries, never a RAG bot.
+> 给 AI 一组同风格图片，不再靠“像不像”的玄学描述：先去 UI / 水印 / 杂项，再逐图 JSON 化，提取跨图共识 Style DNA，最后把任意新场景编译成同风格 Prompt 并出图。
 
-Give it a book (`.pdf` / `.epub` / `.txt` / `.md`). It classifies the book into a capability category, picks a **category-specific distillation strategy**, and produces **one Agent Skill** — a `SKILL.md` operating manual plus `references/` and an auto-generated eval suite — with source provenance for every load-bearing claim.
+## 一句话工作流
 
 ```text
-Thinking in Bets
-        ↓
-Book Classification        decision-making → uncertainty (confidence 0.94)
-        ↓
-Distillation Strategy      decision principles, frameworks, uncertainty handling, biases…
-        ↓
-output/decision-making/thinking-in-bets/
-├── SKILL.md               ← teaches an agent to DECIDE the way the book teaches
-├── BOOK.yaml
-├── references/            ← progressive disclosure: depth lives here
-└── evals/cases.yaml       ← 18 cases: trigger / anti-trigger / application / edge
+参考图
+  ↓
+标准化：去 UI / 字幕 / 水印 / 截图边框 / 干扰项
+  ↓
+逐图视觉 JSON
+  ↓
+跨图共识：Invariant / Variable / Outlier
+  ↓
+Style DNA
+  ↓
+用户新关键词 / 场景 / 想法
+  ↓
+Prompt Compiler
+  ↓
+同风格最终提示词 + 生成图片
 ```
 
-The success test: a generated skill must make an agent **act according to the book's method** — not merely *know what the book said*.
+## 为什么不是“直接让 AI 模仿这几张图”？
 
----
+因为直接模仿很容易把错误的东西学进去：
 
-## Why classification comes first
+- 截图里的点赞按钮，被当成视觉风格；
+- 字幕 / 水印，被写进 prompt；
+- 某一张图里的具体人物，被误认为整个系列都必须出现；
+- 一张离群图，把其他 7 张稳定风格带偏；
+- 最后只剩“电影感、唯美、高级、治愈”这种无法复现的形容词。
 
-A decision-making book, a psychology book, and an engineering book should **not** be distilled with the same "summarize the key points" prompt. Each category yields a different kind of capability:
+这个 Skill 把问题拆成 **证据提取 → 共识聚合 → Prompt 编译** 三层。
 
-| Category | The skill extracts |
-|---|---|
-| `decision-making` | decision principles, frameworks, uncertainty handling, biases, procedures, failure modes |
-| `investing-finance` | investment philosophy, thesis construction, risk framework, position rules, warning signs |
-| `psychology-behavior` | mechanisms, constructs, causal explanations, evidence quality, interventions, misconceptions |
-| `research-science` | methodology, experimental design, validity threats, statistical reasoning, reproducibility |
-| `technology-engineering` | architecture, design principles, implementation patterns, debugging procedures, anti-patterns |
-| `writing` | principles, workflow, editing rules, before/after patterns, checklists |
-| … 16 categories total | see [Taxonomy](#taxonomy) |
+## 核心设计
 
-Classification is stored with an **honest confidence score** and alternatives — if the book is genuinely torn between two categories, the skill says so instead of pretending certainty. The chosen category then selects a [distillation profile](taxonomy/distillation_profiles/) that defines:
+### 1. Normalize first
 
-- what to extract (focus areas),
-- epistemic guardrails (e.g. psychology: never state a theory as absolute fact; separate author opinion from cited evidence),
-- required sections for `SKILL.md`,
-- example trigger / anti-trigger questions for evals.
+默认把以下内容从风格分析中移除：
 
-## What this is / is not
+`UI / status bar / buttons / captions / watermark / logo / device frame / cursor / editor guides`
 
-**Is:** a meta-skill + CLI pipeline: `Book → Classification → Distillation → ONE Agent Skill → Eval`.
+遮挡区域如果无法恢复，就标记为 `unknown`，不会凭空脑补。
 
-**Is not:** a PDF summarizer, chat-with-PDF, RAG chatbot, knowledge-graph platform, multi-user SaaS, or a "one chapter → one skill" splitter.
+### 2. Per-image JSON
 
----
+每张图独立提取：
 
-## Architecture
+- medium / rendering
+- shape language
+- edge / line
+- composition
+- camera / perspective
+- lighting
+- palette relationships
+- material / texture
+- depth / focus
+- detail density
+- atmosphere
+- motion language
+- recurring motifs
+- negative evidence
+
+**内容与风格分开记录。**
+
+### 3. Cross-image consensus
+
+候选特征被分成：
+
+- `INVARIANT`：系列核心风格不变量
+- `VARIABLE`：同风格内可变化部分
+- `OUTLIER`：离群/偶发特征
+- `UNKNOWN`：证据不足
+
+默认不会让一张最花哨的图支配整个风格。
+
+### 4. Style DNA + Prompt Compiler
+
+先得到与具体题材无关的 `style_prompt_base`，再把用户新输入的人物、场景、动作、时间、天气、构图要求、画幅注入进去。
+
+用户只修改一个维度时，Skill 只覆盖那个维度，不会把整个视觉系统一起改掉。
+
+## 目录
 
 ```text
-Book (.pdf/.epub/.txt/.md)
- ↓ 1. Ingest            extract text; detect scanned PDFs → "OCR required"
- ↓ 2. Structure         detect chapters (md headings / chapter patterns / synthetic chunks)
- ↓ 3. Classify          ONE primary category + subcategory + confidence + alternatives
- ↓ 4. Select strategy   category → taxonomy/distillation_profiles/<category>.yaml
- ↓ 5. Distill           whole book → SKILL.md + references/ (4 content types, provenance)
- ↓ 6. Eval              auto-generate ≥18 cases (trigger/anti-trigger/application/edge)
- ↓ 7. QA                validator: schemas, required sections, provenance, eval counts
- ↓ 8. Output            output/<category>/<slug>/
-```
-
-**Division of labor:** the CLI does deterministic work (extraction, structure detection, scaffolding, schema validation, installation). **The calling agent does the judgment work** (classification, distillation, eval authoring) following the binding prompts in `prompts/`. Optional LLM providers exist (`src/.../providers/`) but no API key is required to use this project — the default provider delegates reasoning to the agent running the skill.
-
-### Four content types (hard requirement)
-
-Every reference entry is tagged, so inferences are never passed off as the author's words:
-
-- `SOURCE FACT` — the book states this (description of the method)
-- `AUTHOR CLAIM` — the author's prescription or assertion
-- `EVIDENCE` — evidence the author cites
-- `DISTILLER INFERENCE` — operational rule derived by the distiller; must carry `derived_from` links, never a fabricated source
-
-### Source provenance
-
-```yaml
-- type: AUTHOR CLAIM
-  source: chapter 6, section "Premortems and Tripwires"
-  source_confidence: high
-```
-
-Chapter/section/heading-based (no fabricated page numbers). `source_confidence: high | medium | low` when the location can't be pinned precisely.
-
----
-
-## Example
-
-A complete, copyright-safe example ships in the repo: [examples/books/the-decision-notebook.md](examples/books/the-decision-notebook.md) — an original CC0 mini-book on decision-making — and its fully generated skill in [examples/output/decision-making/the-decision-notebook/](examples/output/decision-making/the-decision-notebook/):
-
-```text
-examples/output/decision-making/the-decision-notebook/
-├── SKILL.md               operating manual: Purpose / Use When / Core Mental Model /
-│                          Operating Procedure / Decision Rules / Failure Modes …
-├── BOOK.yaml              metadata: category, tags, confidence, provenance stats
+image-style-clone-skill/
+├── SKILL.md
+├── README.md
+├── LICENSE
+├── schemas/
+│   └── style-dna.schema.json
 ├── references/
-│   ├── principles.md      P1–P11, each typed + sourced
-│   ├── frameworks.md      named frameworks w/ inputs, steps, outputs
-│   ├── procedures.md      executable step-by-step procedures
-│   ├── examples.md        worked applications to new situations
-│   ├── limitations.md     where the method breaks
-│   └── source-map.md      entry → chapter map + content-type legend
-└── evals/cases.yaml       18 cases
+│   ├── normalization.md
+│   ├── style-dimensions.md
+│   ├── aggregation.md
+│   └── prompt-compiler.md
+├── examples/
+│   └── style_profile.example.json
+└── evals/
+    └── cases.yaml
 ```
 
-*(Conceptual examples like "Thinking in Bets" appear in docs for illustration only; no copyrighted book text is included in this repository.)*
+## 使用方式
 
-## Installation
+把整个目录放进支持 Agent Skills 的环境，或直接把 `SKILL.md` 提供给具备图像理解 + 图像生成能力的 Agent。
 
-```bash
-git clone https://github.com/yangmengze608-afk/book-to-agent-skill.git
-cd book-to-agent-skill
-python -m venv venv && source venv/bin/activate   # Windows: venv\Scripts\activate
-pip install -e ".[dev]"
-```
-
-Requires Python ≥ 3.9. Dependencies: `pypdf`, `PyYAML`, `jsonschema` — no LLM API key required.
-
-## Usage
-
-The repo root is itself a skill (`SKILL.md`) — point an agent at it and say *"turn this book into an agent skill"*. Or drive the pipeline manually:
-
-```bash
-# 1. Ingest + structure + heuristic pre-classification
-book2skill init ./books/thinking-in-bets.epub --workspace ./ws
-
-# 2. (agent) Read ws/book/text.md, write ws/classification.yaml
-#    → then validate + scaffold the skill dir with the category's profile
-book2skill distill --workspace ./ws
-
-# 3. (agent) Fill ws/skill/SKILL.md, references/, evals/cases.yaml
-#    per prompts/ and the selected distillation profile
-
-# 4. Validate + install to output/
-book2skill finalize --workspace ./ws
-```
-
-One-shot convenience (stops where agent reasoning is needed):
-
-```bash
-book2skill run ./book.epub --workspace ./ws
-book2skill doctor        # check environment/taxonomy/schemas
-```
-
-Typical output:
+例如：
 
 ```text
-Classification:
-  Decision Making -> uncertainty (confidence 0.94, method agent)
-  alternative: psychology-behavior (0.63)
-Generating skill...
-Output: output/decision-making/thinking-in-bets/
-Eval: 18/18 cases generated, validation passed
+分析这 7 张图的共同视觉风格。
+先去掉截图里的 UI、字幕、水印和边框；
+逐张总结成 JSON，再提取总 Style DNA。
+接下来把场景改成“巨大橘猫躺在悉尼地铁车厢里，肚皮朝天睡觉”，
+保留其他视觉风格不变。
+最后给我最终 prompt，并直接出图。
 ```
 
-## Output format
+## JSON contract
 
-```text
-output/<primary_category>/<slug>/
-├── SKILL.md          # operating manual, not a book report (≤ ~250 lines)
-├── BOOK.yaml         # title/author/category/tags/confidence/language/generated_at…
-├── references/       # progressive disclosure — read on demand
-└── evals/cases.yaml
-```
+见 [`schemas/style-dna.schema.json`](schemas/style-dna.schema.json)。完整示例见 [`examples/style_profile.example.json`](examples/style_profile.example.json)。
 
-`SKILL.md` frontmatter follows the Agent Skills format (`name` + `description` with use-when triggers) so the skill drops straight into Claude Code / Codex-style skill directories.
+## 设计原则
 
-## Eval
-
-Every generated skill must ship `evals/cases.yaml` with minimums — **5 positive trigger, 5 negative trigger, 5 application, 3 edge case** — validated against [schemas/eval_cases.schema.json](schemas/eval_cases.schema.json):
-
-- **Trigger** — the skill fires when the book's method applies
-- **Anti-trigger** — irrelevant questions don't invoke it (`must_avoid` required)
-- **Application** — the method actually solves a new problem
-- **Fidelity / Overreach** — edge cases probe for invented theory and over-absolute claims
-
-```yaml
-- id: trigger-001
-  type: positive_trigger
-  prompt: >
-    我连续三次投资都赚钱了，是不是说明我的判断方法已经得到验证？
-  expected:
-    - distinguish outcome quality from decision quality (no resulting)
-    - point out the small sample size and what it can/cannot prove
-    - reason probabilistically instead of issuing a verdict
-  must_avoid:
-    - concluding "you are validated" or "you are just lucky"
-```
-
-## Taxonomy
-
-One flat, extensible level of 16 categories in [taxonomy/categories.yaml](taxonomy/categories.yaml) (keywords + subcategories), each with a distillation profile in [taxonomy/distillation_profiles/](taxonomy/distillation_profiles/):
-
-`decision-making` · `investing-finance` · `business-strategy` · `psychology-behavior` · `research-science` · `learning-education` · `writing` · `communication-negotiation` · `productivity` · `leadership-management` · `technology-engineering` · `creativity-design` · `philosophy-thinking` · `health-performance` · `reference-knowledge` · `other`
-
-Adding a category = add one entry to `categories.yaml` + one profile YAML. Profiles merge over [\_base.yaml](taxonomy/distillation_profiles/_base.yaml).
+- 多图共识 > 单图强特征
+- 具体主体 ≠ 风格
+- UI 默认是污染
+- 被遮挡区域 ≠ 证据
+- 多风格混入时先聚类，不强行平均
+- 用户明确 override > 参考图内容
+- Prompt 使用可观察视觉特征，不靠形容词堆砌
 
 ## Limitations
 
-- **No OCR.** Scanned PDFs are detected and reported as `OCR required`; an extension point exists but V1 does not transcribe.
-- **Provenance granularity** is chapter/section/heading — page numbers are used only when the source format reliably provides them, never invented.
-- **Distillation quality depends on the reading agent.** The CLI enforces structure, schemas, provenance, and eval counts; it cannot fully machine-check intellectual fidelity.
-- **English/Chinese tested**; other languages work best with clean structure markers.
-- **One skill per book, by design** — multi-book fusion is explicitly out of scope for V1.
-
-## Prior Art
-
-- **[virgiliojr94/book-to-skill](https://github.com/virgiliojr94/book-to-skill)** and **[apple-ouyang/book-to-skill](https://github.com/apple-ouyang/book-to-skill)** — early explorations of turning book content into skills. What they get right: skill-format output, chapter-aware processing. Where this project differs: classification-driven distillation strategies (no single generic summarization prompt), hard four-type content labeling with provenance, and a built-in eval contract.
-- **OpenAI/Anthropic Agent Skills format** (`SKILL.md` + `references/` with progressive disclosure) — this project targets that format as its output and follows its conventions; no code copied.
-- Generic "chat with your PDF" / RAG tooling — different problem: retrieval answers questions about a book; this project produces a *reusable operating capability* distilled from it.
-
-No source code was copied from any third-party project; all code here is original (MIT).
-
-## Roadmap
-
-```text
-V2: multi-book library
-V3: cross-book deduplication
-V4: book skill routing (which book-skill to invoke when several apply)
-V5: GUI/plugin
-```
-
-Deliberately **not** in V1: web UI, SaaS, accounts, vector DB, knowledge graph, multi-agent orchestration, auto-download of books, auto-splitting a book into many skills.
+- 参考图越少，Style DNA 置信度越低。
+- 如果 UI / 水印遮挡面积过大，无法可靠恢复被遮挡的风格证据。
+- 不同图像生成模型对同一 Prompt 的响应不同；Style DNA 负责提高可迁移性，但不能保证像素级一致。
+- 本项目强调“视觉语言复用”，不是逐像素复制原图。
 
 ## License
 
-[MIT](LICENSE). The example book *The Decision Notebook* is dedicated to the public domain (CC0). Do not commit copyrighted book texts into this repository — distillates are paraphrased transformations with citations, not compressed copies.
+MIT
