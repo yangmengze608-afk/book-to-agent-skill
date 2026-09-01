@@ -1,0 +1,112 @@
+{
+  "reference_set": {
+    "image_count": 5,
+    "primary_cluster": "soft-3d-character",
+    "alternative_clusters": []
+  },
+  "image_evidence": [
+    {
+      "image_id": "ref_01",
+      "normalization": {
+        "contamination": ["mobile status bar", "bottom app controls"],
+        "removed_or_ignored": ["status bar", "like/share UI"],
+        "occlusion_ratio": 0.09,
+        "unknown_regions": []
+      },
+      "content": {
+        "subject": "small animal character",
+        "scene": "bedroom"
+      },
+      "style": {
+        "medium": ["soft stylized 3D render"],
+        "subject_treatment": ["friendly toy-like character treatment"],
+        "shape_language": ["rounded body masses", "short limbs", "large head-to-body ratio"],
+        "line_edge": ["no drawn outlines", "soft silhouette edges"],
+        "composition": ["single dominant subject", "subject fills roughly 55% of frame", "simple readable background"],
+        "camera_perspective": ["eye-level medium shot", "mild perspective"],
+        "lighting": ["large soft key light", "gentle warm fill", "low-contrast shadows"],
+        "palette": ["warm neutral base with one muted accent color"],
+        "materials_textures": ["matte plush-like surface", "very low specular response"],
+        "depth_focus": ["moderate depth of field", "background softly separated"],
+        "motion": ["calm posed moment"],
+        "detail_density": ["simple forms with selective tactile detail"],
+        "atmosphere": ["cozy, visually grounded by warm diffuse light and soft materials"],
+        "recurring_motifs": ["oversized rounded character against uncluttered environment"],
+        "negative_evidence": ["no hard black outlines", "no glossy plastic", "no text overlay"]
+      },
+      "confidence": {
+        "medium": 0.95,
+        "shape_language": 0.92,
+        "lighting": 0.88,
+        "palette": 0.82
+      },
+      "possible_outlier": false
+    }
+  ],
+  "aggregate_style_dna": {
+    "invariants": [
+      {
+        "dimension": "medium",
+        "feature": "soft stylized 3D rendering with tactile toy-like surfaces",
+        "support_ratio": 1.0,
+        "supporting_images": ["ref_01", "ref_02", "ref_03", "ref_04", "ref_05"],
+        "confidence": 0.96
+      },
+      {
+        "dimension": "shape_language",
+        "feature": "rounded oversized body masses, short limbs, simplified proportions",
+        "support_ratio": 1.0,
+        "supporting_images": ["ref_01", "ref_02", "ref_03", "ref_04", "ref_05"],
+        "confidence": 0.95
+      },
+      {
+        "dimension": "lighting",
+        "feature": "broad diffuse key light with soft low-contrast shadows",
+        "support_ratio": 0.8,
+        "supporting_images": ["ref_01", "ref_02", "ref_03", "ref_05"],
+        "confidence": 0.9
+      }
+    ],
+    "variables": [
+      {
+        "dimension": "palette",
+        "feature": "accent hue changes by scene while saturation remains restrained",
+        "support_ratio": 0.6,
+        "supporting_images": ["ref_01", "ref_03", "ref_05"],
+        "confidence": 0.8
+      }
+    ],
+    "outliers": [
+      {
+        "dimension": "camera_perspective",
+        "feature": "one dramatic low-angle wide shot",
+        "support_ratio": 0.2,
+        "supporting_images": ["ref_04"],
+        "confidence": 0.92
+      }
+    ],
+    "unknown": [],
+    "negative_constraints": [
+      "no UI or social-media overlays",
+      "no watermark or logo",
+      "no hard black outlines",
+      "avoid glossy plastic look",
+      "avoid crowded backgrounds"
+    ],
+    "variation_budget": {
+      "subject_identity": "free",
+      "environment": "free",
+      "accent_color": "moderate",
+      "camera_angle": "small-to-moderate variation",
+      "shape_language": "low variation",
+      "material_response": "low variation"
+    },
+    "evidence_summary": {
+      "usable_images": 5,
+      "outlier_images": 0,
+      "mean_occlusion_ratio": 0.08
+    },
+    "overall_confidence": 0.91,
+    "style_prompt_base": "Soft stylized 3D character rendering with oversized rounded body masses, short simplified limbs, tactile matte plush-like surfaces, no drawn outlines, broad diffuse lighting with gentle low-contrast shadows, restrained warm-neutral color relationships with one muted accent, simple readable environments, moderate depth separation, selective tactile detail rather than dense microtexture."
+  }
+}

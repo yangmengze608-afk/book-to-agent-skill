@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/image-style-clone-skill/style-dna.schema.json",
+  "title": "Image Style Clone Skill - Style DNA",
+  "type": "object",
+  "required": ["reference_set", "image_evidence", "aggregate_style_dna"],
+  "properties": {
+    "reference_set": {
+      "type": "object",
+      "required": ["image_count", "primary_cluster"],
+      "properties": {
+        "image_count": {"type": "integer", "minimum": 1},
+        "primary_cluster": {"type": "string"},
+        "alternative_clusters": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": true
+    },
+    "image_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["image_id", "normalization", "style", "confidence"],
+        "properties": {
+          "image_id": {"type": "string"},
+          "normalization": {
+            "type": "object",
+            "required": ["contamination", "occlusion_ratio"],
+            "properties": {
+              "contamination": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "removed_or_ignored": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "occlusion_ratio": {"type": "number", "minimum": 0, "maximum": 1},
+              "unknown_regions": {
+                "type": "array",
+                "items": {"type": "string"}
+              }
+            },
+            "additionalProperties": true
+          },
+          "content": {
+            "type": "object",
+            "description": "Scene-specific content; never automatically promoted to style DNA.",
+            "additionalProperties": true
+          },
+          "style": {
+            "type": "object",
+            "properties": {
+              "medium": {"type": "array", "items": {"type": "string"}},
+              "subject_treatment": {"type": "array", "items": {"type": "string"}},
+              "shape_language": {"type": "array", "items": {"type": "string"}},
+              "line_edge": {"type": "array", "items": {"type": "string"}},
+              "composition": {"type": "array", "items": {"type": "string"}},
+              "camera_perspective": {"type": "array", "items": {"type": "string"}},
+              "lighting": {"type": "array", "items": {"type": "string"}},
+              "palette": {"type": "array", "items": {"type": "string"}},
+              "materials_textures": {"type": "array", "items": {"type": "string"}},
+              "depth_focus": {"type": "array", "items": {"type": "string"}},
+              "motion": {"type": "array", "items": {"type": "string"}},
+              "detail_density": {"type": "array", "items": {"type": "string"}},
+              "atmosphere": {"type": "array", "items": {"type": "string"}},
+              "recurring_motifs": {"type": "array", "items": {"type": "string"}},
+              "negative_evidence": {"type": "array", "items": {"type": "string"}}
+            },
+            "additionalProperties": true
+          },
+          "confidence": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "possible_outlier": {"type": "boolean"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "aggregate_style_dna": {
+      "type": "object",
+      "required": ["invariants", "variables", "outliers", "negative_constraints", "overall_confidence", "style_prompt_base"],
+      "properties": {
+        "invariants": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/aggregateFeature"}
+        },
+        "variables": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/aggregateFeature"}
+        },
+        "outliers": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/aggregateFeature"}
+        },
+        "unknown": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "negative_constraints": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "variation_budget": {
+          "type": "object",
+          "description": "Dimensions that may vary without breaking identity of the style.",
+          "additionalProperties": true
+        },
+        "evidence_summary": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "overall_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "style_prompt_base": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    }
+  },
+  "$defs": {
+    "aggregateFeature": {
+      "type": "object",
+      "required": ["dimension", "feature", "support_ratio", "confidence"],
+      "properties": {
+        "dimension": {"type": "string"},
+        "feature": {"type": "string"},
+        "support_ratio": {"type": "number", "minimum": 0, "maximum": 1},
+        "supporting_images": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}
