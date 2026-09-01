@@ -7,7 +7,7 @@
 [简体中文](./README.md) · **English**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Agent Skills](https://img.shields.io/badge/Agent-Skills-black)](#skills)
+[![Agent Skills](https://img.shields.io/badge/Agent-Skills-black)](./skills/README.md)
 
 </div>
 
@@ -28,14 +28,38 @@ A skill in this repository should ideally contain:
 - eval cases that test triggering, application, fidelity, and edge cases;
 - honest uncertainty handling instead of fabricated confidence.
 
+## Repository structure
+
+```text
+.
+├── README.md
+├── README_EN.md
+├── SKILL.md                     # current root entry: Book → Agent Skill (kept for compatibility)
+├── skills/
+│   ├── README.md                # multi-skill index
+│   ├── book-to-agent/
+│   │   ├── README.md
+│   │   └── SKILL.md
+│   └── image-style-clone/
+│       ├── README.md
+│       ├── SKILL.md
+│       ├── references/
+│       ├── schemas/
+│       ├── examples/
+│       └── evals/
+└── ...                          # remaining Book → Agent supporting assets at the root
+```
+
+You can also start from [`skills/README.md`](./skills/README.md), which acts as the multi-skill index.
+
 ## Skills
 
-| Skill | What it does | Status |
-|---|---|---|
-| **Book → Agent Skill** | Turns one book into one reusable Agent Skill using classification-specific distillation, provenance, and evals. | ✅ Available |
-| **Image Style Clone** | Cleans reference images, extracts per-image JSON evidence, distills shared Style DNA, merges a new user scene, then compiles a same-style generation prompt. | 🧪 Integration in progress |
+| Skill | Path | What it does | Status |
+|---|---|---|---|
+| **Book → Agent Skill** | [`skills/book-to-agent/`](./skills/book-to-agent/README.md) | Turns one book into one reusable Agent Skill using classification-specific distillation, provenance, and evals. | ✅ Available |
+| **Image Style Clone** | [`skills/image-style-clone/`](./skills/image-style-clone/README.md) | Cleans reference images, extracts per-image JSON evidence, distills shared Style DNA, merges a new user scene, then compiles a same-style generation prompt. | ✅ Available |
 
-> The repository is being upgraded from the original `book-to-agent-skill` project into a broader Agent Skill collection. Existing paths are intentionally kept stable while the new multi-skill structure is migrated.
+> This repository started as the single-purpose `book-to-agent-skill` project. It is now being upgraded into a broader Agent Skill collection. The migration strategy is **unify the entry points first, migrate internals gradually** — so each skill gets a stable home under `skills/` without breaking existing workflows.
 
 ---
 
@@ -61,6 +85,8 @@ ONE reusable Agent Skill
 
 The success test is simple: the generated skill should make an agent **act according to the book's method**, not merely know what the book said.
 
+Main entry: [`skills/book-to-agent/README.md`](./skills/book-to-agent/README.md)
+
 ## Why classification comes first
 
 A decision-making book, a psychology book, and an engineering book should not be distilled with the same generic “summarize the key points” prompt.
@@ -80,22 +106,6 @@ Every reference entry is explicitly typed so inference is not passed off as sour
 - `EVIDENCE` — evidence cited in the source;
 - `DISTILLER INFERENCE` — an operational inference derived by the distiller and linked back to its basis.
 
-## Architecture
-
-```text
-Book (.pdf/.epub/.txt/.md)
- ↓ 1. Ingest
- ↓ 2. Structure detection
- ↓ 3. Classify
- ↓ 4. Select category strategy
- ↓ 5. Distill
- ↓ 6. Generate evals
- ↓ 7. QA / schema validation
- ↓ 8. Output
-```
-
-The CLI handles deterministic work such as extraction, structure detection, scaffolding, validation, and installation. The calling agent handles judgment-heavy work such as classification, distillation, and eval authoring.
-
 ## Installation
 
 ```bash
@@ -105,17 +115,13 @@ python -m venv venv && source venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-> GitHub redirects the former repository URL after a rename. The install commands will be updated to the final repository name once the connector has refreshed the new canonical path.
-
-Requires Python ≥ 3.9. Main dependencies: `pypdf`, `PyYAML`, `jsonschema`.
+> The repository has just been renamed. GitHub will redirect the former URL. The install command will be updated to the final canonical repository path once the connector refreshes.
 
 ## Usage
 
 ```bash
 book2skill init ./book.epub --workspace ./ws
-# agent writes classification.yaml
 book2skill distill --workspace ./ws
-# agent fills SKILL.md / references / evals
 book2skill finalize --workspace ./ws
 ```
 
@@ -135,8 +141,6 @@ Every generated book skill ships with at least 18 eval cases:
 - 5 application cases;
 - 3 edge / fidelity cases.
 
-The validator checks structure and minimum contracts, while the evals probe whether the generated skill actually applies the source method without overreaching.
-
 ## Principles
 
 1. **Capability over summary** — produce an operating method, not a compressed book report.
@@ -149,8 +153,10 @@ The validator checks structure and minimum contracts, while the evals probe whet
 ## Roadmap
 
 - [x] Book → Agent Skill
-- [x] Image Style Clone prototype
-- [ ] Migrate to a clean `skills/<skill-name>/` multi-skill layout
+- [x] Image Style Clone
+- [x] Unified `skills/` index entry points
+- [ ] Continue migrating Book → Agent supporting assets into `skills/book-to-agent/`
+- [ ] Add dedicated English READMEs for individual skills
 - [ ] Shared skill index and installation conventions
 - [ ] Cross-skill routing
 - [ ] More reusable Chinese-first Agent Skills
