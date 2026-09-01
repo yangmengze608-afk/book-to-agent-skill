@@ -7,7 +7,7 @@
 **简体中文** · [English](./README_EN.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Agent Skills](https://img.shields.io/badge/Agent-Skills-black)](#skills)
+[![Agent Skills](https://img.shields.io/badge/Agent-Skills-black)](./skills/README.md)
 
 </div>
 
@@ -17,25 +17,49 @@
 
 **Ykmmz Agent Skills** 是一个持续扩展的开源 Agent Skill 仓库。
 
-这里不想堆一堆零散 Prompt。我的目标是把一种真正可重复的方法，沉淀成 Agent 可以**触发、执行、校验、复用**的能力。
+这里不想堆一堆零散 Prompt。目标是把一种真正可重复的方法，沉淀成 Agent 可以**触发、执行、校验、复用**的能力。
 
 一个值得长期保留的 Skill，理想情况下应该包含：
 
 - 清楚、可执行的 `SKILL.md`；
 - 明确的 Use / Do Not Use 边界；
 - 必要时配套 schema、脚本或确定性流程；
-- progressive disclosure：主 Skill 保持精炼，深度内容放进 `references/`；
+- progressive disclosure：主 Skill 保持精炼，深度内容下沉到 `references/`；
 - 能测试触发、应用、忠实度与边界情况的 eval；
 - 对不确定性诚实，而不是为了完整感去编造结论。
 
+## 仓库结构
+
+```text
+.
+├── README.md
+├── README_EN.md
+├── SKILL.md                     # 当前根入口：Book → Agent Skill（兼容保留）
+├── skills/
+│   ├── README.md                # 多 Skill 索引
+│   ├── book-to-agent/
+│   │   ├── README.md
+│   │   └── SKILL.md
+│   └── image-style-clone/
+│       ├── README.md
+│       ├── SKILL.md
+│       ├── references/
+│       ├── schemas/
+│       ├── examples/
+│       └── evals/
+└── ...                          # 其余原有 Book → Agent supporting assets
+```
+
+你也可以直接查看 [`skills/README.md`](./skills/README.md) 作为总目录。
+
 ## Skills
 
-| Skill | 能做什么 | 状态 |
-|---|---|---|
-| **Book → Agent Skill** | 把一本书蒸馏成一个可复用 Agent Skill：先分类，再按类别选择蒸馏策略，同时保留来源与 eval。 | ✅ 可用 |
-| **Image Style Clone** | 清洗参考图 → 逐图 JSON → 提取跨图 Style DNA → 注入新场景 → 编译同风格生图 Prompt。 | 🧪 正在并入主仓库 |
+| Skill | 路径 | 能做什么 | 状态 |
+|---|---|---|---|
+| **Book → Agent Skill** | [`skills/book-to-agent/`](./skills/book-to-agent/README.md) | 把一本书蒸馏成一个可复用 Agent Skill：先分类，再按类别选择蒸馏策略，同时保留来源与 eval。 | ✅ 可用 |
+| **Image Style Clone** | [`skills/image-style-clone/`](./skills/image-style-clone/README.md) | 清洗参考图 → 逐图 JSON → 提取跨图 Style DNA → 注入新场景 → 编译同风格生图 Prompt。 | ✅ 可用 |
 
-> 这个仓库最初是 `book-to-agent-skill`。现在正在升级成我的通用 Agent Skill 总库。重构过程中会优先保证原有路径和能力不被随意破坏。
+> 仓库最初是单一的 `book-to-agent-skill` 项目。现在正在升级成更通用的 Agent Skill 总库，因此采用“**入口先统一，底层渐进迁移**”策略：先把各个 Skill 放到 `skills/` 里形成稳定入口，再逐步把底层 supporting assets 内聚过去，避免破坏已有工作流。
 
 ---
 
@@ -63,6 +87,8 @@ ONE reusable Agent Skill
 
 > **一个新的 Agent，能不能按照这本书的方法去处理一个新的问题。**
 
+完整入口：[`skills/book-to-agent/README.md`](./skills/book-to-agent/README.md)
+
 ## 为什么一定要先分类？
 
 因为决策类书、心理学书、工程书，本来就不应该使用同一个“总结核心观点”模板。
@@ -87,24 +113,6 @@ ONE reusable Agent Skill
 - `EVIDENCE` —— 来源中引用或依赖的证据；
 - `DISTILLER INFERENCE` —— 蒸馏过程中为了执行而得到的推论，必须说明它从哪里推出来。
 
-## 架构
-
-```text
-Book (.pdf/.epub/.txt/.md)
- ↓ 1. Ingest            提取文本
- ↓ 2. Structure         识别章节与结构
- ↓ 3. Classify          判断主能力类别
- ↓ 4. Select strategy   选择类别专属蒸馏策略
- ↓ 5. Distill           生成 SKILL + references
- ↓ 6. Eval              自动构造测试案例
- ↓ 7. QA                schema / 结构 / 来源检查
- ↓ 8. Output            输出可安装 Skill
-```
-
-CLI 负责更确定性的部分：抽取、结构识别、脚手架、schema 校验、安装。
-
-Agent 负责真正需要判断力的部分：分类、蒸馏、规则提炼、eval 编写。
-
 ## 安装
 
 ```bash
@@ -114,20 +122,13 @@ python -m venv venv && source venv/bin/activate
 pip install -e ".[dev]"
 ```
 
-> 仓库刚完成 rename。GitHub 会对旧地址做重定向；等连接器刷新出新的 canonical repo 名后，我会把这里的安装命令一并切到最终地址。
-
-需要 Python ≥ 3.9。主要依赖：`pypdf`、`PyYAML`、`jsonschema`。
+> 仓库刚完成 rename。GitHub 会对旧地址做重定向；等连接器刷新出新的 canonical repo 名后，这里的安装命令会切到最终地址。
 
 ## 使用
 
 ```bash
-# 1. 提取 + 建立结构 + 预分类
 book2skill init ./book.epub --workspace ./ws
-
-# 2. Agent 写入 classification.yaml
 book2skill distill --workspace ./ws
-
-# 3. Agent 完成 SKILL.md / references / evals
 book2skill finalize --workspace ./ws
 ```
 
@@ -147,13 +148,6 @@ book2skill doctor
 - 5 个 application；
 - 3 个 edge / fidelity case。
 
-目的不是“为了有测试而测试”，而是检查：
-
-1. 该触发的时候能不能触发；
-2. 不该触发的时候会不会乱入；
-3. 真遇到新问题时能不能执行书里的方法；
-4. 会不会夸大、杜撰、越过来源证据。
-
 ## 我希望这个仓库坚持的原则
 
 1. **能力 > 摘要** —— Skill 应该让 Agent 会做事，而不是多背了一份笔记。
@@ -166,8 +160,10 @@ book2skill doctor
 ## Roadmap
 
 - [x] Book → Agent Skill
-- [x] Image Style Clone 原型
-- [ ] 重构为 `skills/<skill-name>/` 的统一多 Skill 目录
+- [x] Image Style Clone
+- [x] 统一 `skills/` 索引入口
+- [ ] 继续把 Book → Agent Skill supporting assets 迁入 `skills/book-to-agent/`
+- [ ] 每个 Skill 增加独立英文 README
 - [ ] Skill 索引与统一安装规范
 - [ ] Cross-skill routing
 - [ ] 持续加入更多中文优先、真正可执行的 Agent Skills
