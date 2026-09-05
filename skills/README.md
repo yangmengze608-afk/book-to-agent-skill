@@ -7,7 +7,8 @@
 ```text
 skills/
 ├── book-to-agent/
-└── image-style-clone/
+├── image-style-clone/
+└── white-model-style-clone/
 ```
 
 ## 当前状态
@@ -16,6 +17,7 @@ skills/
 |---|---|---:|---|
 | Book → Agent Skill | `skills/book-to-agent/` | ✅ 已接入 | 文档入口已迁入；为兼容现有 CLI / taxonomy / prompts / schemas，部分实现仍保留在仓库根目录。 |
 | Image Style Clone | `skills/image-style-clone/` | ✅ 已接入 | 完整 Skill、references、schema、example、evals 已并入。 |
+| White Model Style Clone | `skills/white-model-style-clone/` | ✅ 已接入 | 通过白模锁定结构后受控上色，重点抑制噪点、脏污和多余细节。 |
 
 ## 迁移原则
 

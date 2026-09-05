@@ -1,0 +1,4 @@
+interface:
+  display_name: "白模分层风格复刻"
+  short_description: "先做干净白模锁定结构，再按参考图受控上色并抑制多余细节"
+  default_prompt: "使用 $white-model-style-clone 先把目标画面简化为干净白模，再用参考图只恢复配色、光线和必要材质，禁止添加白模中不存在的细节。"
